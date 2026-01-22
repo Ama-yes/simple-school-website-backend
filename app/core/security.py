@@ -1,7 +1,9 @@
 from passlib.context import CryptContext
 from app.core.config import settings
 from datetime import datetime, timedelta
-from jose import jwt
+from jose import jwt, JWTError
+from jose.exceptions import ExpiredSignatureError
+from app.core.logging import setup_logger
 
 
 context = CryptContext(schemes=["bcrypt"])
@@ -11,6 +13,10 @@ ENCODING_KEY = settings.encoder_key
 ALGORITHM = "HS256"
 ACCES_TOKEN_EXPIRE_MINUTES = 5
 REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+
+logger = setup_logger()
+
 
 def password_hashing(password: str):
     return context.hash(password)
@@ -31,9 +37,20 @@ def create_access_token(data: dict):
 def create_refresh_token(data: dict):
     to_encode = data.copy()
     
-    expire = datetime.now() + timedelta(minutes=REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire})
     
     encoded = jwt.encode(to_encode, key=ENCODING_KEY, algorithm=ALGORITHM)
     
     return encoded
+
+def check_token(token):
+    to_decode = token
+    try:
+        decoded = jwt.decode(token=to_decode, key=ENCODING_KEY, algorithms=ALGORITHM)
+        return decoded
+    
+    except ExpiredSignatureError:
+        logger.error("Token expired!")
+    except JWTError as e:
+        logger.error(f"Error: {e}")

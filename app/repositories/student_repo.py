@@ -11,7 +11,7 @@ class StudentRepository:
     
     def student_signin(self, student: StudentSigningIn):
         db = self._db
-        student = Student(name=student.name, email=student.email, hashed_password=password_hashing(student.password), token_version=1, grades=[])
+        student = Student(name=student.name, email=student.email, hashed_password=password_hashing(student.password), token_version=1)
         
         try:
             db.add(student)
