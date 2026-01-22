@@ -22,8 +22,8 @@ class StudentRepository:
         
         db.refresh(student)
         
-        access_token = create_access_token({"sub": student.email})
-        refresh_token = create_refresh_token({"sub": student.email, "version": student.token_version})
+        access_token = create_access_token({"sub": student.email, "role": "student"})
+        refresh_token = create_refresh_token({"sub": student.email, "version": student.token_version, "role": "student"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
     
@@ -37,7 +37,7 @@ class StudentRepository:
         if not db_student or not check_password(plain_password=student.password, hashed_password=db_student.hashed_password):
             raise ValueError("Email or password incorrect!")
         
-        access_token = create_access_token({"sub": student.email})
+        access_token = create_access_token({"sub": student.email, "role": "student"})
         refresh_token = create_refresh_token({"sub": student.email, "version": db_student.token_version, "role": "student"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
@@ -64,7 +64,7 @@ class StudentRepository:
         db_student = query.first()
         
         if not db_student:
-            raise ValueError("Admin doesn't exist!")
+            raise ValueError("Student doesn't exist!")
         
         if db_student.token_version != token_v:
             raise ValueError("Invalid token version!")
@@ -89,6 +89,6 @@ class StudentRepository:
     def student_token_refresh(self, token: str):
         db_student = self.student_verify_refresh_token(token)
         
-        access_token = create_access_token({"sub": db_student.email})
+        access_token = create_access_token({"sub": db_student.email, "role": "student"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}

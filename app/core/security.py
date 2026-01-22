@@ -11,7 +11,7 @@ context = CryptContext(schemes=["bcrypt"])
 
 ENCODING_KEY = settings.encoder_key
 ALGORITHM = "HS256"
-ACCES_TOKEN_EXPIRE_MINUTES = 5
+ACCES_TOKEN_EXPIRE_MINUTES = 15
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 

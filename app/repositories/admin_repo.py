@@ -23,8 +23,8 @@ class AdminRepository:
         
         db.refresh(admin)
         
-        access_token = create_access_token({"sub": admin.email})
-        refresh_token = create_refresh_token({"sub": admin.email, "version": admin.token_version})
+        access_token = create_access_token({"sub": admin.username, "role": "admin"})
+        refresh_token = create_refresh_token({"sub": admin.username, "version": admin.token_version, "role": "admin"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
     
@@ -38,7 +38,7 @@ class AdminRepository:
         if not db_admin or not check_password(plain_password=admin.password, hashed_password=db_admin.hashed_password):
             raise ValueError("Email or password incorrect!")
         
-        access_token = create_access_token({"sub": admin.username})
+        access_token = create_access_token({"sub": admin.username, "role": "admin"})
         refresh_token = create_refresh_token({"sub": admin.username, "version": db_admin.token_version, "role": "admin"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
@@ -88,7 +88,7 @@ class AdminRepository:
     def admin_token_refresh(self, token: str):
         db_admin = self.admin_verify_refresh_token(token)
         
-        access_token = create_access_token({"sub": db_admin.username})
+        access_token = create_access_token({"sub": db_admin.username, "role": "admin"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
         
