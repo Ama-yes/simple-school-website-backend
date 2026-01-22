@@ -7,6 +7,13 @@ class StudentSigningIn(BaseModel):
     password: str
     confirm_password: str
     
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str):
+        if len(value) < 8:
+            raise ValueError("Invalid name!")
+        return value.lower()
+    
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
@@ -73,6 +80,13 @@ class AdminSigningIn(BaseModel):
     password: str
     confirm_password: str
     
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str):
+        if len(value) < 6:
+            raise ValueError("Invalid username!")
+        return value.lower()
+    
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
@@ -103,7 +117,7 @@ class AdminLoggingIn(BaseModel):
     
     @field_validator("username")
     @classmethod
-    def validate_email(cls, value: str):
+    def validate_username(cls, value: str):
         return value.lower()
 
 

@@ -43,5 +43,5 @@ services:
     environment:
       - REDIS_WORKER_URL=redis://redis:6379/1
     command: ["uv", "run", "celery", "-A", "app.core.celery_app.celery_worker", "worker", "--loglevel=info"]
-volumes:
-  postgres_data:
+#volumes:
+  #postgres_data:
