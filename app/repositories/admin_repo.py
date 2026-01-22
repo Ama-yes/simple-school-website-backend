@@ -29,10 +29,10 @@ class AdminRepository:
         result = check_token(token)
         
         if not result:
-            raise ValueError("Token invalid!")
+            raise ValueError("Invalid credentials!")
         
         if not result["version"]:
-            raise ValueError("Use refresh token!")
+            raise ValueError("Invalid token type!")
         
         username = result["sub"]
         token_v = result["version"]
@@ -45,7 +45,7 @@ class AdminRepository:
             raise ValueError("Admin doesn't exist!")
         
         if db_admin.token_version != token_v:
-            raise ValueError("Token invalid!")
+            raise ValueError("Invalid token version!")
         
         db_admin.token_version += 1
         db_admin.hashed_password = password_hashing(password=new_password) 

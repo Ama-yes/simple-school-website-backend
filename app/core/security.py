@@ -51,6 +51,6 @@ def check_token(token):
         return decoded
     
     except ExpiredSignatureError:
-        logger.error("Token expired!")
+        raise ValueError("Token expired!")
     except JWTError as e:
-        logger.error(f"Error: {e}")
+        raise ValueError(f"Error: {e}")
