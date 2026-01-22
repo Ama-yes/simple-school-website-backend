@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 import uvicorn
-
+from app.api.v1 import student_router
 
 app = FastAPI()
+app.include_router(student_router.router, prefix="/students", tags=["Students Route"])
 
 
 

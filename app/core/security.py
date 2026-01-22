@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from jose import jwt
 
 
-
 context = CryptContext(schemes=["bcrypt"])
+
 
 ENCODING_KEY = settings.encoder_key
 ALGORITHM = "HS256"

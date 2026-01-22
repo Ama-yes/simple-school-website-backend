@@ -34,7 +34,10 @@ class StudentRepository:
         if not db_student or not check_password(plain_password=student.password, hashed_password=db_student.hashed_password):
             raise ValueError("Email or password incorrect!")
         
-        db_student.token_version += 1
+        db_student.token_version += 1 # Will be moved to "student_change_password()"
+        db.add(db_student)
+        db.commit()
+        db.refresh(db_student)
         
         access_token = create_access_token({"sub": student.email})
         refresh_token = create_refresh_token({"sub": student.email, "version": db_student.token_version})
