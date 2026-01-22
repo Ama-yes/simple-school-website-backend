@@ -43,6 +43,24 @@ class Admin(BaseModel):
     username: str
 
 
+class AdminSigningIn(BaseModel):
+    username: str
+    email: str
+    password: str
+    confirm_password: str
+    
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str):
+        return value.lower()
+    
+    @model_validator(mode="after")
+    def confirm_psswd(self):
+        if self.password != self.confirm_password:
+            raise ValueError("Password confirmation mismatch!")
+        return self
+
+
 class AdminLoggingIn(BaseModel):
     username: str
     password: str

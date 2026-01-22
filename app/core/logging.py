@@ -12,7 +12,7 @@ class JsonFormatter(logging.Formatter):
         if record.exc_info:
             log["exception"] = self.formatException(record.exc_info)
         
-        return json.dumps(record)
+        return json.dumps(log)
 
 
 def setup_logger():

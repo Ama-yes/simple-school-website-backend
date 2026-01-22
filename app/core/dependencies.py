@@ -11,4 +11,3 @@ def get_database():
     finally:
         db.close()
 
-

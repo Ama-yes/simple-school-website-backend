@@ -1,4 +1,4 @@
-from app.models.schemas import AdminLoggingIn, Token
+from app.models.schemas import AdminLoggingIn, AdminSigningIn
 from app.models.models import Admin
 from app.core.security import check_token, check_password, create_access_token, create_refresh_token, password_hashing
 from sqlalchemy.orm import Session, joinedload, selectinload
@@ -8,6 +8,25 @@ from sqlalchemy.exc import IntegrityError
 class AdminRepository:
     def __init__(self, session: Session):
         self._db = session
+    
+    
+    def admin_signin(self, admin: AdminSigningIn):
+        db = self._db
+        admin = Admin(username=admin.username, email=admin.email, hashed_password=password_hashing(admin.password), token_version=1)
+        
+        try:
+            db.add(admin)
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise ValueError("Admin already exists!")
+        
+        db.refresh(admin)
+        
+        access_token = create_access_token({"sub": admin.email})
+        refresh_token = create_refresh_token({"sub": admin.email, "version": admin.token_version})
+        
+        return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
     
     
     def admin_login(self, admin: AdminLoggingIn):
@@ -20,18 +39,18 @@ class AdminRepository:
             raise ValueError("Email or password incorrect!")
         
         access_token = create_access_token({"sub": admin.username})
-        refresh_token = create_refresh_token({"sub": admin.username, "version": db_admin.token_version})
+        refresh_token = create_refresh_token({"sub": admin.username, "version": db_admin.token_version, "role": "admin"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
     
     
-    def admin_change_password(self, token, new_password: str):
+    def verify_admin(self, token):
         result = check_token(token)
         
         if not result:
             raise ValueError("Invalid credentials!")
         
-        if not result["version"]:
+        if not result.get("version"):
             raise ValueError("Invalid token type!")
         
         username = result["sub"]
@@ -47,6 +66,13 @@ class AdminRepository:
         if db_admin.token_version != token_v:
             raise ValueError("Invalid token version!")
         
+        return db_admin
+    
+    
+    def admin_change_password(self, new_password: str, token: str):
+        db = self._db
+        db_admin = self.verify_admin(token)
+        
         db_admin.token_version += 1
         db_admin.hashed_password = password_hashing(password=new_password) 
         db.add(db_admin)
@@ -54,5 +80,13 @@ class AdminRepository:
         db.refresh(db_admin)
         
         return {"status": "Completed", "detail": "Log back in necessary!"}
+    
+    
+    def admin_token_refresh(self, token: str):
+        db_admin = self.verify_admin(token)
+        
+        access_token = create_access_token({"sub": db_admin.username})
+        
+        return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
         
         
