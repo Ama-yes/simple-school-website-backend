@@ -37,3 +37,11 @@ def admin_change_password(new_password: str, token: str = Depends(admin_oauth2),
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e)
 
+
+@router.post("/refresh", response_model=Token)
+def admin_change_password(token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_token_refresh(token)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e)
+
