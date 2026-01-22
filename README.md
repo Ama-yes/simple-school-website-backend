@@ -25,7 +25,6 @@ app/
 ├── db
 ├── models
 ├── repositories
-
 └── main.py
 ```
 
