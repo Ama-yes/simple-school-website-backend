@@ -10,7 +10,19 @@ class StudentSigningIn(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        if len(value) < 4 or '@' not in value:
+            raise ValueError("Invalid email!")
         return value.lower()
+    
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8 or value == value.upper() or value == value.lower():
+            raise ValueError("Password is weak!")
+        
+        if len(value) > 32:
+            raise ValueError("Password is too long!")
+        return value
     
     @model_validator(mode="after")
     def confirm_psswd(self):
@@ -26,7 +38,19 @@ class StudentLoggingIn(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        if len(value) < 4 or '@' not in value:
+            raise ValueError("Invalid email!")
         return value.lower()
+    
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8 or value == value.upper() or value == value.lower():
+            raise ValueError("Password is weak!")
+        
+        if len(value) > 32:
+            raise ValueError("Password is too long!")
+        return value
 
 class StudentLoggedIn(BaseModel):
     id: int
@@ -52,7 +76,19 @@ class AdminSigningIn(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        if len(value) < 4 or '@' not in value:
+            raise ValueError("Invalid email!")
         return value.lower()
+    
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8 or value == value.upper() or value == value.lower():
+            raise ValueError("Password is weak!")
+        
+        if len(value) > 32:
+            raise ValueError("Password is too long!")
+        return value
     
     @model_validator(mode="after")
     def confirm_psswd(self):

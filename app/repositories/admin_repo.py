@@ -88,7 +88,7 @@ class AdminRepository:
     def admin_token_refresh(self, token: str):
         db_admin = self.admin_verify_refresh_token(token)
         
-        access_token = create_access_token({"sub": db_admin.username})
+        access_token = create_access_token({"sub": db_admin.username, "role": "admin"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
         
