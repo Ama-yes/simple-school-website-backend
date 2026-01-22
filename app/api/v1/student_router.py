@@ -37,3 +37,11 @@ def student_change_password(new_password: str, token: str = Depends(student_oaut
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e)
 
+
+@router.post("/refresh", response_model=Token)
+def student_token_refresh(token: str = Depends(student_oauth2), repo: StudentRepository = Depends(get_student_repo)):
+    try:
+        return repo.student_token_refresh(token)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e)
+

@@ -43,7 +43,7 @@ class StudentRepository:
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
     
     
-    def verify_student(self, token):
+    def student_verify_refresh_token(self, token) -> Student:
         result = check_token(token)
         
         if not result:
@@ -51,6 +51,9 @@ class StudentRepository:
         
         if not result.get("version"):
             raise ValueError("Invalid token type!")
+        
+        if result.get("role") != "student":
+            raise ValueError("Unexpected role!")
         
         email = result["sub"]
         token_v = result["version"]
@@ -72,7 +75,7 @@ class StudentRepository:
     
     def student_change_password(self, new_password: str, token: str):
         db = self._db
-        db_student = self.verify_student(token)
+        db_student = self.student_verify_refresh_token(token)
         
         db_student.token_version += 1
         db_student.hashed_password = password_hashing(password=new_password) 
@@ -84,7 +87,7 @@ class StudentRepository:
     
     
     def student_token_refresh(self, token: str):
-        db_student = self.verify_student(token)
+        db_student = self.student_verify_refresh_token(token)
         
         access_token = create_access_token({"sub": db_student.email})
         

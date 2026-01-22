@@ -44,7 +44,7 @@ class AdminRepository:
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
     
     
-    def verify_admin(self, token):
+    def admin_verify_refresh_token(self, token) -> Admin:
         result = check_token(token)
         
         if not result:
@@ -52,6 +52,9 @@ class AdminRepository:
         
         if not result.get("version"):
             raise ValueError("Invalid token type!")
+        
+        if result.get("role") != "admin":
+            raise ValueError("Unexpected role!")
         
         username = result["sub"]
         token_v = result["version"]
@@ -71,7 +74,7 @@ class AdminRepository:
     
     def admin_change_password(self, new_password: str, token: str):
         db = self._db
-        db_admin = self.verify_admin(token)
+        db_admin = self.admin_verify_refresh_token(token)
         
         db_admin.token_version += 1
         db_admin.hashed_password = password_hashing(password=new_password) 
@@ -83,7 +86,7 @@ class AdminRepository:
     
     
     def admin_token_refresh(self, token: str):
-        db_admin = self.verify_admin(token)
+        db_admin = self.admin_verify_refresh_token(token)
         
         access_token = create_access_token({"sub": db_admin.username})
         
