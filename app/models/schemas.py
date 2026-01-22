@@ -16,6 +16,7 @@ class StudentSigningIn(BaseModel):
     def confirm_psswd(self):
         if self.password != self.confirm_password:
             raise ValueError("Password confirmation mismatch!")
+        return self
 
 
 class StudentLoggingIn(BaseModel):
