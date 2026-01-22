@@ -9,15 +9,15 @@ class Student(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    token_version = Column(Integer)
+    hashed_password = Column(String, index=True)
+    token_version = Column(Integer, index=True)
     grades = relationship("Grade", back_populates="student")
 
 
 class Grade(Base):
     __tablename__ = "Grade"
     id = Column(Integer, primary_key=True, index=True)
-    subject_name = Column(String, unique=True, index=True)
+    subject_name = Column(String, index=True)
     grade = Column(Float)
     student_id = Column(Integer, ForeignKey("Student.id", ondelete="CASCADE"))
     student = relationship("Student", back_populates="grades")
@@ -28,5 +28,5 @@ class Admin(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    token_version = Column(Integer)
+    hashed_password = Column(String, index=True)
+    token_version = Column(Integer, index=True)

@@ -1,0 +1,37 @@
+services:
+  backend:
+    build: .
+    container_name: school_app_backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - ENCODER_KEY=${ENCODER_KEY}
+      - DATABASE_URL=postgresql://school_user:school_password@postgres:5432/school_db
+      - REDIS_CACHING_URL=redis://redis:6379/0
+      - REDIS_WORKER_URL=redis://redis:6379/0
+    volumes:
+      - .:/app
+  
+  postgres:
+    image: postgres:alpine
+    container_name: school_app_db
+    restart: always
+    environment:
+      - POSTGRES_USER=school_user
+      - POSTGRES_PASSWORD=school_password
+      - POSTGRES_DB=school_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    container_name: school_app_redis
+    ports:
+      - "6379:6379"
+#volumes:
+ # postgres_data:
