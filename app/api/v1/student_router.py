@@ -1,0 +1,23 @@
+from fastapi import APIRouter, Depends
+from app.models.schemas import Token, StudentLoggingIn, StudentSigningIn
+from app.repositories.student_repo import StudentRepository
+from app.core.dependencies import get_database
+from sqlalchemy.orm import Session
+
+
+router = APIRouter()
+
+
+def get_student_repo(db: Session = Depends(get_database)):
+    return StudentRepository(db)
+
+
+@router.post("/signin")
+def student_signin(data: StudentSigningIn, repo: StudentRepository = Depends(get_student_repo)):
+    return repo.student_signin(student=data)
+
+
+@router.post("/login", response_model=Token)
+def student_login(data: StudentLoggingIn, repo: StudentRepository = Depends(get_student_repo)):
+    return repo.student_login(student=data)
+
