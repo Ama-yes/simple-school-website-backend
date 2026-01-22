@@ -18,7 +18,9 @@ A simple yet scalable backend API for managing students, built with FASTAPI, SQL
 
 ## Project Structure
 `app/
+
 ├── api
+
 │   └── v1
 ├── core
 ├── db
