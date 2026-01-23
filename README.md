@@ -1,4 +1,4 @@
-# School Management Backend API
+# School Management Backend API (WORK IN PROGRESS)
 A simple yet scalable backend API for managing students, built with FASTAPI, SQLAlchemy and PostreSQL.
 
 
@@ -17,6 +17,7 @@ A simple yet scalable backend API for managing students, built with FASTAPI, SQL
 
 
 ## Project Structure
+```
 app/
 ├── api
 │   └── v1
@@ -25,6 +26,7 @@ app/
 ├── models
 ├── repositories
 └── main.py
+```
 
 
 ## Getting Started
