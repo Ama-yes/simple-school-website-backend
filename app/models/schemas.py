@@ -176,7 +176,7 @@ class AdminLoggingIn(BaseModel):
 
 
 # ---- Response Models ---- #
-class Grade(BaseModel):
+class GradeBase(BaseModel):
     value: float
     number: int
     model_config = ConfigDict(from_attributes=True)
@@ -217,7 +217,7 @@ class GradeForTch(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Student(BaseModel):
+class StudentBase(BaseModel):
     id: int
     name: str
     email: str
@@ -226,23 +226,23 @@ class Student(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Subject(BaseModel):
+class SubjectBase(BaseModel):
     id: int
     subject_name: str
     teacher: TeacherSummary | None
-    grades: list[Grade]
+    grades: list[GradeBase]
     model_config = ConfigDict(from_attributes=True)
 
 
-class Teacher(BaseModel):
+class TeacherBase(BaseModel):
     id: int
     name: str
     email: str
-    subjects: list[Subject]
+    subjects: list[SubjectBase]
     model_config = ConfigDict(from_attributes=True)
 
 
-class Admin(BaseModel):
+class AdminBase(BaseModel):
     id: int
     username: str
     email: str
