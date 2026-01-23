@@ -1,6 +1,9 @@
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 
+
+# ---- Validation Models ---- #
+## Student ##
 class StudentSigningIn(BaseModel):
     name: str
     email: str
@@ -10,7 +13,7 @@ class StudentSigningIn(BaseModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, value: str):
-        if len(value) < 8:
+        if len(value) < 6:
             raise ValueError("Invalid name!")
         return value.lower()
     
@@ -59,21 +62,70 @@ class StudentLoggingIn(BaseModel):
             raise ValueError("Password is too long!")
         return value
 
-class StudentLoggedIn(BaseModel):
-    id: int
+
+
+## Teacher ##
+class TeacherSigningIn(BaseModel):
     name: str
+    email: str
+    password: str
+    confirm_password: str
+    
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str):
+        if len(value) < 6:
+            raise ValueError("Invalid name!")
+        return value.lower()
+    
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str):
+        if len(value) < 4 or '@' not in value:
+            raise ValueError("Invalid email!")
+        return value.lower()
+    
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8 or value == value.upper() or value == value.lower():
+            raise ValueError("Password is weak!")
+        
+        if len(value) > 32:
+            raise ValueError("Password is too long!")
+        return value
+    
+    @model_validator(mode="after")
+    def confirm_psswd(self):
+        if self.password != self.confirm_password:
+            raise ValueError("Password confirmation mismatch!")
+        return self
 
 
-class GradeCheck(BaseModel):
-    subject_name: str
-    grade: float
+class TeacherLoggingIn(BaseModel):
+    email: str
+    password: str
+    
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str):
+        if len(value) < 4 or '@' not in value:
+            raise ValueError("Invalid email!")
+        return value.lower()
+    
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8 or value == value.upper() or value == value.lower():
+            raise ValueError("Password is weak!")
+        
+        if len(value) > 32:
+            raise ValueError("Password is too long!")
+        return value
 
 
-class Admin(BaseModel):
-    id: int
-    username: str
 
-
+## Admin ##
 class AdminSigningIn(BaseModel):
     username: str
     email: str
@@ -121,7 +173,84 @@ class AdminLoggingIn(BaseModel):
         return value.lower()
 
 
+
+
+# ---- Response Models ---- #
+class Grade(BaseModel):
+    value: float
+    number: int
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TeacherSummary(BaseModel):
+    id: int
+    name: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SubjectSummary(BaseModel):
+    id: int
+    subject_name: str
+    teacher: TeacherSummary | None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class GradeForStd(BaseModel):
+    subject: SubjectSummary
+    value: float
+    number: int
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StudentSummary(BaseModel):
+    id: int
+    name: str
+    email: str
+    school_year: int
+    model_config = ConfigDict(from_attributes=True)
+
+
+class GradeForTch(BaseModel):
+    student: StudentSummary
+    value: float # or maybe just "grade: Grade" ?
+    number: int
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Student(BaseModel):
+    id: int
+    name: str
+    email: str
+    school_year: int
+    grades: list[GradeForStd]
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Subject(BaseModel):
+    id: int
+    subject_name: str
+    teacher: TeacherSummary | None
+    grades: list[Grade]
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Teacher(BaseModel):
+    id: int
+    name: str
+    email: str
+    subjects: list[Subject]
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Admin(BaseModel):
+    id: int
+    username: str
+    email: str
+    model_config = ConfigDict(from_attributes=True)
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
     refresh_token: str
+
