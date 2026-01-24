@@ -9,7 +9,8 @@ from app.core.logging import setup_logger
 context = CryptContext(schemes=["bcrypt"])
 
 
-ENCODING_KEY = settings.encoder_key
+ACCESS_ENCODING_KEY = settings.access_encoder_key
+REFRESH_ENCODING_KEY = settings.refresh_encoder_key
 ALGORITHM = "HS256"
 ACCES_TOKEN_EXPIRE_MINUTES = 15
 REFRESH_TOKEN_EXPIRE_DAYS = 7
@@ -30,7 +31,7 @@ def create_access_token(data: dict):
     expire = datetime.now() + timedelta(minutes=ACCES_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     
-    encoded = jwt.encode(to_encode, key=ENCODING_KEY, algorithm=ALGORITHM)
+    encoded = jwt.encode(to_encode, key=ACCESS_ENCODING_KEY, algorithm=ALGORITHM)
     
     return encoded
 
@@ -40,14 +41,25 @@ def create_refresh_token(data: dict):
     expire = datetime.now() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire})
     
-    encoded = jwt.encode(to_encode, key=ENCODING_KEY, algorithm=ALGORITHM)
+    encoded = jwt.encode(to_encode, key=REFRESH_ENCODING_KEY, algorithm=ALGORITHM)
     
     return encoded
 
-def check_token(token):
+def check_access_token(token):
     to_decode = token
     try:
-        decoded = jwt.decode(token=to_decode, key=ENCODING_KEY, algorithms=ALGORITHM)
+        decoded = jwt.decode(token=to_decode, key=ACCESS_ENCODING_KEY, algorithms=ALGORITHM)
+        return decoded
+    
+    except ExpiredSignatureError:
+        raise ValueError("Token expired!")
+    except JWTError as e:
+        raise ValueError(f"Error: {e}")
+
+def check_refresh_token(token):
+    to_decode = token
+    try:
+        decoded = jwt.decode(token=to_decode, key=REFRESH_ENCODING_KEY, algorithms=ALGORITHM)
         return decoded
     
     except ExpiredSignatureError:

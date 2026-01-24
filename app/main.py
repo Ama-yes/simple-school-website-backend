@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import uvicorn
-from app.api.v1 import student_router, admin_router
+from app.api.v1 import student_router, admin_router, teacher_router
 from app.core.logging import setup_logger
 from app.db.database import engine
 from app.models.models import Base
@@ -18,6 +18,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(student_router.router, prefix="/student", tags=["Students Route"])
+app.include_router(teacher_router.router, prefix="/teacher", tags=["Teachers Route"])
 app.include_router(admin_router.router, prefix="/admin", tags=["Admins Route"])
 
 logger = setup_logger()
