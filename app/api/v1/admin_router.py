@@ -34,7 +34,7 @@ def admin_login(user: AdminLoggingIn, repo: AuthRepository = Depends(get_auth_re
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/change/password", response_model=dict)
+@router.post("/change-password", response_model=dict)
 def admin_change_password(new_password: str, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_change_password(new_password, token)

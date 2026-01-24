@@ -30,7 +30,7 @@ class AdminRepository:
         db_admin = query.first()
         
         if not db_admin:
-            raise ValueError("Admin doesn't exist!")
+            raise ValueError("Invalid credentials!")
         
         if db_admin.token_version != token_v:
             raise ValueError("Invalid token version!")
@@ -54,7 +54,7 @@ class AdminRepository:
     def admin_token_refresh(self, token: str):
         db_admin = self.admin_verify_refresh_token(token)
         
-        access_token = create_access_token({"sub": db_admin.username, "role": "admin"})
+        access_token = create_access_token({"sub": db_admin.username, "role": "Admin"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
     

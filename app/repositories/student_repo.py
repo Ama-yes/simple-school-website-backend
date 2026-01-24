@@ -31,7 +31,7 @@ class StudentRepository:
         db_student = query.first()
         
         if not db_student:
-            raise ValueError("Student doesn't exist!")
+            raise ValueError("Invalid credentials!")
         
         if db_student.token_version != token_v:
             raise ValueError("Invalid token version!")
@@ -55,7 +55,7 @@ class StudentRepository:
     def student_token_refresh(self, token: str):
         db_student = self.student_verify_refresh_token(token)
         
-        access_token = create_access_token({"sub": db_student.email, "role": "student"})
+        access_token = create_access_token({"sub": db_student.email, "role": "Student"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
     

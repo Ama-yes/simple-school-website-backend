@@ -34,7 +34,7 @@ def student_login(user: StudentLoggingIn, repo: AuthRepository = Depends(get_aut
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/change/password", response_model=dict)
+@router.post("/change-password", response_model=dict)
 def student_change_password(new_password: str, token: str = Depends(student_oauth2), repo: StudentRepository = Depends(get_student_repo)):
     try:
         return repo.student_change_password(new_password, token)
