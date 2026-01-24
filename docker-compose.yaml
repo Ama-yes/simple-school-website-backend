@@ -42,7 +42,11 @@ services:
       - redis
       - postgres
     environment:
+      - ACCESS_ENCODER_KEY=${ACCESS_ENCODER_KEY}
+      - REFRESH_ENCODER_KEY=${REFRESH_ENCODER_KEY}
+      - DATABASE_URL=postgresql://school_user:school_password@postgres:5432/school_db
+      - REDIS_CACHING_URL=redis://redis:6379/0
       - REDIS_WORKER_URL=redis://redis:6379/1
     command: ["uv", "run", "celery", "-A", "app.core.celery_app.celery_worker", "worker", "--loglevel=info"]
-#volumes:
-  #postgres_data:
+volumes:
+  postgres_data:
