@@ -13,6 +13,10 @@ services:
       - DATABASE_URL=postgresql://school_user:school_password@postgres:5432/school_db
       - REDIS_CACHING_URL=redis://redis:6379/0
       - REDIS_WORKER_URL=redis://redis:6379/1
+      - SMTP_SERVER=mailpit
+      - SMTP_PORT=1025
+      - SMTP_USER=""
+      - SMTP_PASSWORD=""
     volumes:
       - .:/app
   
@@ -47,6 +51,20 @@ services:
       - DATABASE_URL=postgresql://school_user:school_password@postgres:5432/school_db
       - REDIS_CACHING_URL=redis://redis:6379/0
       - REDIS_WORKER_URL=redis://redis:6379/1
+      - SMTP_SERVER=mailpit
+      - SMTP_PORT=1025
+      - SMTP_USER=""
+      - SMTP_PASSWORD=""
     command: ["uv", "run", "celery", "-A", "app.core.celery_app.celery_worker", "worker", "--loglevel=info"]
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: school_app_mail
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - default
+
 volumes:
   postgres_data:

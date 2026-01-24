@@ -1,9 +1,12 @@
 from app.models.schemas import StudentLoggingIn, StudentSigningIn
 from app.models.models import Student
+from app.core.config import settings
 from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token, check_refresh_token
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
 from app.worker.tasks import send_email
+from datetime import datetime, timedelta
+import uuid
 
 
 class StudentRepository:
@@ -67,7 +70,36 @@ class StudentRepository:
         db_student = query.first()
         
         if not db_student:
-            raise ValueError("Student doesn't exist!")
+            raise ValueError(f"{email} is not linked to any account!")
         
-        result = send_email.apply_async(args=(db_student.name, email, "Click here to reset your password!"), expires=30, countdown=5)
+        reset_token = str(uuid.uuid4())
+        
+        db_student.reset_token = reset_token
+        db_student.reset_token_expire = datetime.now() + timedelta(minutes=15)
+        
+        db.commit()
+        
+        link = f"{settings.hostname}/student/password-resetting/{reset_token}"
+        
+        result = send_email.apply_async(args=(email, f"Hey {db_student.name},\nClick below to reset your password:\n{link}", "Password Reset Request"), expires=30, countdown=5)
         return result
+    
+    
+    def student_verify_reset_token(self, token: str, password: str):
+        db = self._db
+        
+        query = db.query(Student).filter(Student.reset_token == token)
+        db_student = query.first()
+        
+        if not db_student or db_student.reset_token_expire < datetime.now():
+            raise ValueError("Invalid link!")
+        
+        
+        db_student.token_version += 1
+        db_student.hashed_password = password_hashing(password) 
+        db_student.reset_token = None
+        db_student.reset_token_expire = None
+        db.add(db_student)
+        db.commit()
+        
+        return {"status": "Completed", "detail": "Log back in necessary!"}

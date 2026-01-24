@@ -8,6 +8,13 @@ class Settings(BaseSettings):
     database_url: str
     redis_caching_url: str
     redis_worker_url: str
+    hostname: str
+    
+    # SMTP Config
+    smtp_server: str
+    smtp_port: str
+    smtp_user: str
+    smtp_password: str
     
     model_config = ConfigDict(env_file =".env")
     

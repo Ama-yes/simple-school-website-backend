@@ -1,5 +1,5 @@
-from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token, check_refresh_token
-from sqlalchemy.orm import Session, joinedload, selectinload
+from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.models.schemas import AdminLoggingIn, AdminSigningIn, StudentLoggingIn, StudentSigningIn, TeacherLoggingIn, TeacherSigningIn
 from app.models.models import Admin, Teacher, Student
