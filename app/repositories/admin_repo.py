@@ -1,8 +1,9 @@
 from app.models.schemas import AdminLoggingIn, AdminSigningIn
 from app.models.models import Admin
-from app.core.security import check_token, check_password, create_access_token, create_refresh_token, password_hashing
+from app.core.security import check_refresh_token, check_password, create_access_token, create_refresh_token, password_hashing
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
+from app.worker.tasks import send_email
 
 
 class AdminRepository:
@@ -45,7 +46,7 @@ class AdminRepository:
     
     
     def admin_verify_refresh_token(self, token) -> Admin:
-        result = check_token(token)
+        result = check_refresh_token(token)
         
         if not result:
             raise ValueError("Invalid credentials!")
@@ -91,5 +92,18 @@ class AdminRepository:
         access_token = create_access_token({"sub": db_admin.username, "role": "admin"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
+    
+    
+    def admin_reset_password(self, email: str):
+        db = self._db
+        
+        query = db.query(Admin).filter(Admin.email == email)
+        db_admin = query.first()
+        
+        if not db_admin:
+            raise ValueError("Admin doesn't exist!")
+        
+        result = send_email.apply_async(args=(db_admin.username, email, "Click here to reset your password!"), expires=30, countdown=5)
+        return result
         
         

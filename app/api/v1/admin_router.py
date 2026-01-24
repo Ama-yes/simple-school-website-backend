@@ -45,3 +45,11 @@ def admin_token_refresh(token: str = Depends(admin_oauth2), repo: AdminRepositor
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
+
+@router.post("/resetpassword", response_model=str)
+def admin_reset_password(email: str, repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_reset_password(email)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+

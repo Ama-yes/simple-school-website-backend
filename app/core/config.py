@@ -3,7 +3,8 @@ from pydantic import ConfigDict
 
 
 class Settings(BaseSettings):
-    encoder_key: str
+    access_encoder_key: str
+    refresh_encoder_key: str
     database_url: str
     redis_caching_url: str
     redis_worker_url: str

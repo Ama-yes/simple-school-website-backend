@@ -1,8 +1,9 @@
 from app.models.schemas import TeacherLoggingIn, TeacherSigningIn
 from app.models.models import Teacher
-from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token, check_token
+from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token, check_refresh_token
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
+from app.worker.tasks import send_email
 
 
 class TeacherRepository:
@@ -44,7 +45,7 @@ class TeacherRepository:
     
     
     def teacher_verify_refresh_token(self, token) -> Teacher:
-        result = check_token(token)
+        result = check_refresh_token(token)
         
         if not result:
             raise ValueError("Invalid credentials!")
@@ -92,3 +93,16 @@ class TeacherRepository:
         access_token = create_access_token({"sub": db_teacher.email, "role": "teacher"})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
+    
+    
+    def teacher_reset_password(self, email: str):
+        db = self._db
+        
+        query = db.query(Teacher).filter(Teacher.email == email)
+        db_teacher = query.first()
+        
+        if not db_teacher:
+            raise ValueError("Teacher doesn't exist!")
+        
+        result = send_email.apply_async(args=(db_teacher.name, email, "Click here to reset your password!"), expires=30, countdown=5)
+        return result
