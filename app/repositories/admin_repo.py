@@ -10,41 +10,6 @@ class AdminRepository:
     def __init__(self, session: Session):
         self._db = session
     
-    
-    def admin_signin(self, admin: AdminSigningIn):
-        db = self._db
-        admin = Admin(username=admin.username, email=admin.email, hashed_password=password_hashing(admin.password), token_version=1)
-        
-        try:
-            db.add(admin)
-            db.commit()
-        except IntegrityError:
-            db.rollback()
-            raise ValueError("Admin already exists!")
-        
-        db.refresh(admin)
-        
-        access_token = create_access_token({"sub": admin.username, "role": "admin"})
-        refresh_token = create_refresh_token({"sub": admin.username, "version": admin.token_version, "role": "admin"})
-        
-        return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
-    
-    
-    def admin_login(self, admin: AdminLoggingIn):
-        db = self._db
-        query = db.query(Admin).filter(Admin.username == admin.username)
-        
-        db_admin = query.first()
-        
-        if not db_admin or not check_password(plain_password=admin.password, hashed_password=db_admin.hashed_password):
-            raise ValueError("Email or password incorrect!")
-        
-        access_token = create_access_token({"sub": admin.username, "role": "admin"})
-        refresh_token = create_refresh_token({"sub": admin.username, "version": db_admin.token_version, "role": "admin"})
-        
-        return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
-    
-    
     def admin_verify_refresh_token(self, token) -> Admin:
         result = check_refresh_token(token)
         
@@ -54,7 +19,7 @@ class AdminRepository:
         if not result.get("version"):
             raise ValueError("Invalid token type!")
         
-        if result.get("role") != "admin":
+        if result.get("role") != "Admin":
             raise ValueError("Unexpected role!")
         
         username = result["sub"]
