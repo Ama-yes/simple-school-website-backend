@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.models.schemas import Token, StudentLoggingIn, StudentSigningIn
 from app.repositories.student_repo import StudentRepository
+from app.repositories.auth_repo import AuthRepository
 from app.core.dependencies import get_database
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
@@ -13,24 +14,27 @@ student_oauth2 = OAuth2PasswordBearer("/student/login")
 def get_student_repo(db: Session = Depends(get_database)):
     return StudentRepository(db)
 
+def get_auth_repo(db: Session = Depends(get_database)):
+    return AuthRepository(db, "Student")
+
 
 @router.post("/signin")
-def student_signin(data: StudentSigningIn, repo: StudentRepository = Depends(get_student_repo)):
+def student_signin(data: StudentSigningIn, repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.student_signin(student=data)
+        return repo.signin(data)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/login", response_model=Token)
-def student_login(data: StudentLoggingIn, repo: StudentRepository = Depends(get_student_repo)):
+def student_login(user: StudentLoggingIn, repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.student_login(student=data)
+        return repo.login(user)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/change/password", response_model=dict)
+@router.post("/change-password", response_model=dict)
 def student_change_password(new_password: str, token: str = Depends(student_oauth2), repo: StudentRepository = Depends(get_student_repo)):
     try:
         return repo.student_change_password(new_password, token)
