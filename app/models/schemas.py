@@ -212,7 +212,7 @@ class StudentSummary(BaseModel):
 
 class GradeForTch(BaseModel):
     student: StudentSummary
-    value: float # or maybe just "grade: Grade" ?
+    value: float
     number: int
     model_config = ConfigDict(from_attributes=True)
 
