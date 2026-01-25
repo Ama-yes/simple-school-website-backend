@@ -20,9 +20,9 @@ class AuthRepository:
         
         match role:
             case "Teacher":
-                user = Teacher(name=data.name, email=data.email, hashed_password=password_hashing(data.password), school_year =data.school_year, token_version=1)
+                user = Teacher(name=data.name, email=data.email, hashed_password=password_hashing(data.password), token_version=1)
             case "Student":
-                user = Student(name=data.name, email=data.email, hashed_password=password_hashing(data.password), token_version=1)
+                user = Student(name=data.name, email=data.email, hashed_password=password_hashing(data.password), school_year=data.school_year, token_version=1)
             case "Admin":
                 user = Admin(username=data.username, email=data.email, hashed_password=password_hashing(data.password), token_version=1)
         
