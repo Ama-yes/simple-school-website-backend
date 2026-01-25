@@ -9,6 +9,7 @@ class StudentSigningIn(BaseModel):
     email: str
     password: str
     confirm_password: str
+    school_year: int | None
     
     @field_validator("name")
     @classmethod
@@ -173,6 +174,35 @@ class AdminLoggingIn(BaseModel):
         return value.lower()
 
 
+class GradeInsert(BaseModel):
+    value: float
+    number: int
+    
+    @field_validator("value")
+    @classmethod
+    def validate_value(cls, value: float):
+        if value < 0 or value > 100:
+            raise ValueError("Invalid grade!")
+        return value
+    
+    @field_validator("number")
+    @classmethod
+    def validate_number(cls, value: int):
+        if value < 0 or value > 100:
+            raise ValueError("Invalid grade number!")
+        return value
+
+
+class SubjectInsert(BaseModel):
+    subject_name: str
+    teacher_id: int | None
+    
+    @field_validator("subject_name")
+    @classmethod
+    def validate_username(cls, value: str):
+        return value.upper()
+
+
 
 
 # ---- Response Models ---- #
@@ -206,7 +236,7 @@ class StudentSummary(BaseModel):
     id: int
     name: str
     email: str
-    school_year: int
+    school_year: int | None
     model_config = ConfigDict(from_attributes=True)
 
 

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.schemas import Token, StudentLoggingIn, StudentSigningIn
+from app.models.schemas import Token, StudentLoggingIn, StudentSigningIn, GradeForStd
 from app.repositories.student_repo import StudentRepository
 from app.repositories.auth_repo import AuthRepository
 from app.core.dependencies import get_database
@@ -54,6 +54,22 @@ def student_token_refresh(token: str = Depends(student_oauth2), repo: StudentRep
 def student_reset_password(email: str, repo: StudentRepository = Depends(get_student_repo)):
     try:
         return repo.student_reset_password(email)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.post("/password-resetting/{token}", response_model=dict)
+def student_verify_reset_token(token: str, password: str, repo: StudentRepository = Depends(get_student_repo)):
+    try:
+        return repo.student_verify_reset_token(token, password)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.post("/grades", response_model=list[GradeForStd])
+def grades_check(token: str = Depends(student_oauth2), repo: StudentRepository = Depends(get_student_repo)):
+    try:
+        return repo.student_grades_check(token)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

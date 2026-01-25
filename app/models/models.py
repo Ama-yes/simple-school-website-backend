@@ -13,6 +13,8 @@ class Student(Base):
     school_year = Column(Integer, index=True)
     token_version = Column(Integer, index=True)
     grades = relationship("Grade", back_populates="student")
+    reset_token = Column(String, nullable=True)
+    reset_token_expire = Column(DateTime, nullable=True)
 
 class Teacher(Base):
     __tablename__ = "teacher"
@@ -22,12 +24,14 @@ class Teacher(Base):
     hashed_password = Column(String, index=True)
     token_version = Column(Integer, index=True)
     subjects = relationship("Subject", back_populates="teacher")
+    reset_token = Column(String, nullable=True)
+    reset_token_expire = Column(DateTime, nullable=True)
 
 
 class Subject(Base):
     __tablename__ = "subject"
     id = Column(Integer, primary_key=True, index=True)
-    subject_name = Column(String, index=True)
+    subject_name = Column(String, unique=True, index=True)
     teacher_id = Column(Integer, ForeignKey("teacher.id", ondelete="SET NULL"))
     teacher = relationship("Teacher", back_populates="subjects")
     grades = relationship("Grade", back_populates="subject")
@@ -51,3 +55,5 @@ class Admin(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String, index=True)
     token_version = Column(Integer, index=True)
+    reset_token = Column(String, nullable=True)
+    reset_token_expire = Column(DateTime, nullable=True)

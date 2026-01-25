@@ -1,5 +1,5 @@
-from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token, check_refresh_token
-from sqlalchemy.orm import Session, joinedload, selectinload
+from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.models.schemas import AdminLoggingIn, AdminSigningIn, StudentLoggingIn, StudentSigningIn, TeacherLoggingIn, TeacherSigningIn
 from app.models.models import Admin, Teacher, Student
@@ -22,7 +22,7 @@ class AuthRepository:
             case "Teacher":
                 user = Teacher(name=data.name, email=data.email, hashed_password=password_hashing(data.password), token_version=1)
             case "Student":
-                user = Student(name=data.name, email=data.email, hashed_password=password_hashing(data.password), token_version=1)
+                user = Student(name=data.name, email=data.email, hashed_password=password_hashing(data.password), school_year=data.school_year, token_version=1)
             case "Admin":
                 user = Admin(username=data.username, email=data.email, hashed_password=password_hashing(data.password), token_version=1)
         
