@@ -5,8 +5,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - ACCESS_ENCODER_KEY=${ACCESS_ENCODER_KEY}
       - REFRESH_ENCODER_KEY=${REFRESH_ENCODER_KEY}
@@ -32,6 +34,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U school_user -d school_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:alpine
