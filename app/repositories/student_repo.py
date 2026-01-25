@@ -81,7 +81,7 @@ class StudentRepository:
         
         link = f"{settings.hostname}/student/password-resetting/{reset_token}"
         
-        send_email.apply_async(args=(email, f"Hey {db_student.name},\nClick below to reset your password:\n{link}\nNOTE: THIS ISN'T A CLICKABLE LINK, YOU SHOULD SENT A POST REQUEST TO IT WITH YOUR EMAIL!", "Password Reset Request"), expires=30, countdown=5)
+        send_email.apply_async(args=(email, f"Hey {db_student.name},\nClick below to reset your password:\n{link}\nNOTE: THIS ISN'T A CLICKABLE LINK, YOU SHOULD SEND A 'POST' REQUEST TO IT INCLUDING THE NEW PASSWORD!", "Password Reset Request"), expires=30, countdown=5)
         return "Email sent in the backgroud!"
     
     
