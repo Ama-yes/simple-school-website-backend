@@ -17,7 +17,7 @@ def send_email(email: str, message: str, subject: str):
     
     try:
         with SMTP(settings.smtp_server, int(settings.smtp_port)) as server:
-            if settings.smtp_user and settings.smtp_password:
+            if settings.smtp_user != "" and settings.smtp_password != "":
                 server.starttls()
                 server.login(settings.smtp_user, settings.smtp_password)
             

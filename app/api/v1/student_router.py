@@ -58,7 +58,7 @@ def student_reset_password(email: str, repo: StudentRepository = Depends(get_stu
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/password-resetting/{token}", response_model=str)
+@router.post("/password-resetting/{token}", response_model=dict)
 def student_verify_reset_token(token: str, password: str, repo: StudentRepository = Depends(get_student_repo)):
     try:
         return repo.student_verify_reset_token(token, password)
