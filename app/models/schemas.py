@@ -9,6 +9,7 @@ class StudentSigningIn(BaseModel):
     email: str
     password: str
     confirm_password: str
+    school_year: int | None
     
     @field_validator("name")
     @classmethod
@@ -235,7 +236,7 @@ class StudentSummary(BaseModel):
     id: int
     name: str
     email: str
-    school_year: int
+    school_year: int | None
     model_config = ConfigDict(from_attributes=True)
 
 
