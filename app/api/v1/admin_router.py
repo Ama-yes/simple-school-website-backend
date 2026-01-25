@@ -58,16 +58,16 @@ def admin_reset_password(email: str, repo: AdminRepository = Depends(get_admin_r
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/password-resetting/{token}", response_model=dict)
-def admin_verify_reset_token(token: str, password: str, repo: AdminRepository = Depends(get_admin_repo)):
+@router.post("/password-resetting/{reset_token}", response_model=dict)
+def admin_verify_reset_token(reset_token: str, password: str, repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_verify_reset_token(token, password)
+        return repo.admin_verify_reset_token(reset_token, password)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/add-subject", response_model=SubjectSummary)
-def admin_add_subject(token: str, subject: SubjectInsert, repo: AdminRepository = Depends(get_admin_repo)):
+def admin_add_subject(subject: SubjectInsert, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_add_subject(token, subject)
     except ValueError as e:

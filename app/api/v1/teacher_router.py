@@ -59,10 +59,10 @@ def teacher_reset_password(email: str, repo: TeacherRepository = Depends(get_tea
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/password-resetting/{token}", response_model=dict)
-def teacher_verify_reset_token(token: str, password: str, repo: TeacherRepository = Depends(get_teacher_repo)):
+@router.post("/password-resetting/{reset_token}", response_model=dict)
+def teacher_verify_reset_token(reset_token: str, password: str, repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        return repo.teacher_verify_reset_token(token, password)
+        return repo.teacher_verify_reset_token(reset_token, password)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
