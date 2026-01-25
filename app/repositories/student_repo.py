@@ -1,7 +1,7 @@
-from app.models.schemas import StudentLoggingIn, StudentSigningIn
-from app.models.models import Student
+from app.models.schemas import StudentLoggingIn, StudentSigningIn, GradeForStd
+from app.models.models import Student, Grade, Subject
 from app.core.config import settings
-from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token, check_refresh_token
+from app.core.security import password_hashing, check_access_token, create_access_token, create_refresh_token, check_refresh_token
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
 from app.worker.tasks import send_email
@@ -103,3 +103,23 @@ class StudentRepository:
         db.commit()
         
         return {"status": "Completed", "detail": "Log back in necessary!"}
+    
+    
+    def student_grades_check(self, token: str) -> list[GradeForStd]:
+        db = self._db
+        
+        result = check_access_token(token)
+        
+        if not result:
+            raise ValueError("Invalid credentials!")
+        
+        if result.get("role") != "Student":
+            raise ValueError("Unexpected role!")
+        
+        query = db.query(Student).filter(Student.email == result.get("sub")).options(selectinload(Student.grades).joinedload(Grade.subject).joinedload(Subject.teacher))
+        db_student = query.first()
+        
+        if not db_student:
+            raise ValueError("Student doesn't exist!")
+        
+        return db_student.grades
