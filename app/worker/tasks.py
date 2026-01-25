@@ -2,7 +2,7 @@ from app.core.celery_app import celery_worker
 from app.core.logging import setup_logger
 from app.core.config import settings
 from email.message import EmailMessage
-import smtplib
+from smtplib import SMTP
 
 logger = setup_logger()
 
@@ -16,7 +16,7 @@ def send_email(email: str, message: str, subject: str):
     email_msg["To"] = email
     
     try:
-        with smtplib.SMTP(settings.smtp_server, int(settings.smtp_port)) as server:
+        with SMTP(settings.smtp_server, int(settings.smtp_port)) as server:
             if settings.smtp_user and settings.smtp_password:
                 server.starttls()
                 server.login(settings.smtp_user, settings.smtp_password)

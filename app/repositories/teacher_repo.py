@@ -81,7 +81,7 @@ class TeacherRepository:
         
         link = f"{settings.hostname}/teacher/password-resetting/{reset_token}"
         
-        result = send_email.apply_async(args=(email, f"Hey {db_teacher.name},\nClick below to reset your password:\n{link}", "Password Reset Request"), expires=30, countdown=5)
+        result = send_email.apply_async(args=(email, f"Hey {db_teacher.name},\nClick below to reset your password:\n{link}\nNOTE: THIS ISN'T A CLICKABLE LINK, YOU SHOULD SENT A POST REQUEST TO IT WITH YOUR EMAIL!", "Password Reset Request"), expires=30, countdown=5)
         return result
     
     
