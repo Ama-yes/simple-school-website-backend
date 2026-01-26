@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse, ConfirmPassword
-from app.models.models import Teacher
+from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse, ConfirmPassword, TeacherBase, TeacherEdit
 from app.repositories.teacher_repo import TeacherRepository
 from app.repositories.auth_repo import AuthRepository
 from app.core.dependencies import get_database
@@ -67,10 +66,27 @@ def teacher_verify_reset_token(reset_token: str, password: ConfirmPassword, repo
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
+@router.get("/me", response_model=TeacherBase)
+def student_check_profile(token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+    try:
+        student = repo.verify_refresh_token(token)
+        return student
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
 @router.post("/grade/{student_id}", response_model=GradeForTch)
 def teacher_grade_student(student_id: int, subject: str, grade: GradeInsert, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
         return repo.teacher_grade_student(token, student_id, subject.upper(), grade)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.patch("/me", response_model=TeacherBase)
+def admin_modify_profile(data: TeacherEdit, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+    try:
+        return repo.teacher_modify_profile(token, data)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

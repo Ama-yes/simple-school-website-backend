@@ -140,7 +140,7 @@ class AuthRepository:
             case "Admin":
                 query = db.query(Admin).filter(Admin.email == email)
         
-        db_user = query.first()        
+        db_user = query.first()
         
         if not db_user:
             raise ValueError(f"{email} is not linked to any account!")

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.schemas import Token, AdminLoggingIn, AdminSigningIn, SubjectSummary, SubjectInsert, BasicResponse, ConfirmPassword
+from app.models.schemas import Token, AdminLoggingIn, AdminSigningIn, SubjectSummary, SubjectInsert, BasicResponse, ConfirmPassword, AdminBase, StudentSummary, TeacherBase, AdminEdit
 from app.repositories.admin_repo import AdminRepository
 from app.repositories.auth_repo import AuthRepository
 from app.core.dependencies import get_database
@@ -66,10 +66,59 @@ def admin_verify_reset_token(reset_token: str, password: ConfirmPassword, repo: 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
+@router.get("/me", response_model=AdminBase)
+def student_check_profile(token: str = Depends(admin_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+    try:
+        student = repo.verify_refresh_token(token)
+        return student
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
 @router.post("/add-subject", response_model=SubjectSummary)
 def admin_add_subject(subject: SubjectInsert, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_add_subject(token, subject)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.get("/students", response_model=list[StudentSummary])
+def admin_list_students(token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_list_students(token)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.get("/teachers", response_model=list[TeacherBase])
+def admin_list_teachers(token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_list_teachers(token)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.get("/subjects", response_model=list[SubjectSummary])
+def admin_list_subjects(token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_list_subjects(token)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.post("/assign-subject", response_model=BasicResponse)
+def admin_assign_subject_to_teacher(subject_id: int, teacher_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_assign_subject_to_teacher(token, subject_id, teacher_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.patch("/me", response_model=AdminBase)
+def admin_modify_profile(data: AdminEdit, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_modify_profile(token, data)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

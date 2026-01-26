@@ -1,4 +1,4 @@
-from app.models.schemas import GradeInsert
+from app.models.schemas import GradeInsert, TeacherEdit
 from app.models.models import Teacher, Student, Grade, Subject
 from app.core.security import password_hashing, check_access_token, create_access_token, create_refresh_token, check_refresh_token
 from sqlalchemy.orm import Session, joinedload, selectinload
@@ -65,3 +65,34 @@ class TeacherRepository:
         
         return {"student": db_student, "value": grade.value, "number": grade.number}
         # or return {"student": {"id": int, "name": str, "email": str, "school_year": int}, "value": grade.value, "number": grade.number}
+
+
+    def teacher_modify_profile(self, token: str, data: TeacherEdit) -> Teacher:
+        db = self._db
+        
+        result = check_access_token(token)
+        
+        if not result:
+            raise ValueError("Invalid credentials!")
+        
+        if result.get("role") != "Teacher":
+            raise ValueError("Unexpected role!")
+        
+        query = db.query(Teacher).filter(Teacher.email == result.get("sub"))
+        db_teacher = query.first()
+        
+        if not db_teacher:
+            raise ValueError("Teacher doesn't exist!")
+        
+        
+        if data.name:
+            db_teacher.name = data.name
+        
+        if data.email:
+            db_teacher.email = data.email
+        
+        db.add(db_teacher)
+        db.commit()
+        db.refresh(db_teacher)
+        
+        return db_teacher

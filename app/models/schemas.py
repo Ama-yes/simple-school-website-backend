@@ -77,6 +77,26 @@ class StudentLoggingIn(BaseModel):
         return value
 
 
+class StudentEdit(BaseModel):
+    name: str
+    email: str
+    school_year: int | None
+    
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str):
+        if len(value) < 6:
+            raise ValueError("Invalid name!")
+        return value.lower()
+    
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str):
+        if len(value) < 4 or '@' not in value:
+            raise ValueError("Invalid email!")
+        return value.lower()
+
+
 
 ## Teacher ##
 class TeacherSigningIn(BaseModel):
@@ -138,6 +158,25 @@ class TeacherLoggingIn(BaseModel):
         return value
 
 
+class TeacherEdit(BaseModel):
+    name: str
+    email: str
+    
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str):
+        if len(value) < 6:
+            raise ValueError("Invalid name!")
+        return value.lower()
+    
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str):
+        if len(value) < 4 or '@' not in value:
+            raise ValueError("Invalid email!")
+        return value.lower()
+
+
 
 ## Admin ##
 class AdminSigningIn(BaseModel):
@@ -184,6 +223,25 @@ class AdminLoggingIn(BaseModel):
     @field_validator("username")
     @classmethod
     def validate_username(cls, value: str):
+        return value.lower()
+
+
+class AdminEdit(BaseModel):
+    username: str
+    email: str
+    
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str):
+        if len(value) < 6:
+            raise ValueError("Invalid username!")
+        return value.lower()
+    
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str):
+        if len(value) < 4 or '@' not in value:
+            raise ValueError("Invalid email!")
         return value.lower()
 
 
