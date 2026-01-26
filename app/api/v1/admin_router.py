@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.schemas import Token, AdminLoggingIn, AdminSigningIn, SubjectSummary, SubjectInsert
+from app.models.schemas import Token, AdminLoggingIn, AdminSigningIn, SubjectSummary, SubjectInsert, BasicResponse
 from app.repositories.admin_repo import AdminRepository
 from app.repositories.auth_repo import AuthRepository
 from app.core.dependencies import get_database
@@ -34,7 +34,7 @@ def admin_login(user: AdminLoggingIn, repo: AuthRepository = Depends(get_auth_re
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/change-password", response_model=dict)
+@router.post("/change-password", response_model=BasicResponse)
 def admin_change_password(new_password: str, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_change_password(new_password, token)
@@ -50,7 +50,7 @@ def admin_token_refresh(token: str = Depends(admin_oauth2), repo: AdminRepositor
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/resetpassword", response_model=str)
+@router.post("/resetpassword", response_model=BasicResponse)
 def admin_reset_password(email: str, repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_reset_password(email)
@@ -58,7 +58,7 @@ def admin_reset_password(email: str, repo: AdminRepository = Depends(get_admin_r
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/password-resetting/{reset_token}", response_model=dict)
+@router.post("/password-resetting/{reset_token}", response_model=BasicResponse)
 def admin_verify_reset_token(reset_token: str, password: str, repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_verify_reset_token(reset_token, password)

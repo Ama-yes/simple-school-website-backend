@@ -284,3 +284,8 @@ class Token(BaseModel):
     token_type: str
     refresh_token: str
 
+
+class BasicResponse(BaseModel):
+    status: str
+    detail: str
+

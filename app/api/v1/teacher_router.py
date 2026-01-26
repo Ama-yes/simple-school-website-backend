@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert
+from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse
 from app.models.models import Teacher
 from app.repositories.teacher_repo import TeacherRepository
 from app.repositories.auth_repo import AuthRepository
@@ -35,7 +35,7 @@ def teacher_login(user: TeacherLoggingIn, repo: AuthRepository = Depends(get_aut
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/change-password", response_model=dict)
+@router.post("/change-password", response_model=BasicResponse)
 def teacher_change_password(new_password: str, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
         return repo.teacher_change_password(new_password, token)
@@ -51,7 +51,7 @@ def teacher_token_refresh(token: str = Depends(teacher_oauth2), repo: TeacherRep
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/resetpassword", response_model=str)
+@router.post("/resetpassword", response_model=BasicResponse)
 def teacher_reset_password(email: str, repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
         return repo.teacher_reset_password(email)
@@ -59,7 +59,7 @@ def teacher_reset_password(email: str, repo: TeacherRepository = Depends(get_tea
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/password-resetting/{reset_token}", response_model=dict)
+@router.post("/password-resetting/{reset_token}", response_model=BasicResponse)
 def teacher_verify_reset_token(reset_token: str, password: str, repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
         return repo.teacher_verify_reset_token(reset_token, password)
