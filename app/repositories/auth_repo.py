@@ -36,12 +36,7 @@ class AuthRepository:
             db.rollback()
             raise ValueError(f"{role} already exists!")
         
-        db.refresh(user)
-        
-        access_token = create_access_token({"sub": user.email, "role": role})
-        refresh_token = create_refresh_token({"sub": user.email, "version": user.token_version, "role": role})
-        
-        return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
+        return {"status": "Completed", "detail": "Sign in successful!"}
     
     
     def login(self, user: AdminLoggingIn | StudentLoggingIn | TeacherLoggingIn):
@@ -61,6 +56,9 @@ class AuthRepository:
         
         if not db_user or not check_password(plain_password=user.password, hashed_password=db_user.hashed_password):
             raise ValueError("Email or password incorrect!")
+        
+        if role != "Admin" and not db_user.approved:
+            raise ValueError("Account locked or not yet approved by an admin!")
         
         access_token = create_access_token({"sub": db_user.email, "role": role})
         refresh_token = create_refresh_token({"sub": db_user.email, "version": db_user.token_version, "role": role})
@@ -159,7 +157,7 @@ class AuthRepository:
         return {"status": "Completed", "detail": "Email sent in the backgroud!"}
     
     
-    def verify_reset_token(self, token: str, psswrd: ConfirmPassword):
+    def verify_token_reset_psswrd(self, token: str, psswrd: ConfirmPassword):
         db = self._db
         role = self._role
         
@@ -184,3 +182,52 @@ class AuthRepository:
         db.commit()
         
         return {"status": "Completed", "detail": "Log back in necessary!"}
+    
+    
+    def delete_user(self, token: str, todelete_id = None, user_type = None):
+        role = self._role
+        
+        result = check_refresh_token(token)
+        
+        if not result:
+            raise ValueError("Invalid credentials!")
+        
+        if not result.get("version"):
+            raise ValueError("Invalid token type!")
+        
+        if result.get("role") != role:
+            raise ValueError("Unexpected role!")
+        
+        if role != "Admin" and todelete_id:
+            raise ValueError("Insufficient permissions!")
+        
+        email = result["sub"]
+        
+        db = self._db
+        
+        match role:
+            case "Teacher":
+                query = db.query(Teacher).filter(Teacher.email == email)
+            case "Student":
+                query = db.query(Student).filter(Student.email == email)
+            case "Admin":
+                if not todelete_id:
+                    query = db.query(Admin).filter(Admin.email == email)
+                
+                elif user_type == "Teacher":
+                    query = db.query(Teacher).filter(Teacher.id == todelete_id)
+                
+                elif user_type == "Student":
+                    query = db.query(Student).filter(Student.id == todelete_id)
+        
+        
+        db_user = query.first()
+        
+        if not db_user:
+            raise ValueError(f"{user_type if user_type else role} doesn't exist!")
+        
+        
+        db.delete(db_user)
+        db.commit()
+        
+        return {"status": "Completed", "detail": "Deletion successful!"}

@@ -18,7 +18,7 @@ def get_auth_repo(db: Session = Depends(get_database)):
     return AuthRepository(db, "Student")
 
 
-@router.post("/signin")
+@router.post("/signin", response_model=BasicResponse)
 def student_signin(data: StudentSigningIn, repo: AuthRepository = Depends(get_auth_repo)):
     try:
         return repo.signin(data)
@@ -59,9 +59,9 @@ def student_reset_password(email: str, repo: AuthRepository = Depends(get_auth_r
 
 
 @router.post("/password-resetting/{reset_token}", response_model=BasicResponse)
-def student_verify_reset_token(reset_token: str, password: ConfirmPassword, repo: AuthRepository = Depends(get_auth_repo)):
+def student_verify_token_reset_psswrd(reset_token: str, password: ConfirmPassword, repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.verify_reset_token(reset_token, password)
+        return repo.verify_token_reset_psswrd(reset_token, password)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
@@ -87,6 +87,14 @@ def student_grades_check(token: str = Depends(student_oauth2), repo: StudentRepo
 def student_modify_profile(data: StudentEdit, token: str = Depends(student_oauth2), repo: StudentRepository = Depends(get_student_repo)):
     try:
         return repo.student_modify_profile(token, data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.delete("/me", response_model=BasicResponse)
+def admin_delete_self(token: str = Depends(student_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+    try:
+        return repo.delete_user(token)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

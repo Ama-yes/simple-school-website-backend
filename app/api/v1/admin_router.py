@@ -18,7 +18,7 @@ def get_auth_repo(db: Session = Depends(get_database)):
     return AuthRepository(db, "Admin")
 
 
-@router.post("/signin", response_model=Token)
+@router.post("/signin", response_model=BasicResponse)
 def admin_signin(data: AdminSigningIn, repo: AuthRepository = Depends(get_auth_repo)):
     try:
         return repo.signin(data)
@@ -59,9 +59,9 @@ def admin_reset_password(email: str, repo: AuthRepository = Depends(get_auth_rep
 
 
 @router.post("/password-resetting/{reset_token}", response_model=BasicResponse)
-def admin_verify_reset_token(reset_token: str, password: ConfirmPassword, repo: AuthRepository = Depends(get_auth_repo)):
+def admin_verify_token_reset_psswrd(reset_token: str, password: ConfirmPassword, repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.verify_reset_token(reset_token, password)
+        return repo.verify_token_reset_psswrd(reset_token, password)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
@@ -119,6 +119,62 @@ def admin_assign_subject_to_teacher(subject_id: int, teacher_id: int, token: str
 def admin_modify_profile(data: AdminEdit, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_modify_profile(token, data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.patch("/student/{student_id}", response_model=BasicResponse)
+def admin_approve_student(student_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_approve_student(token, student_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.patch("/teacher/{teacher_id}", response_model=BasicResponse)
+def admin_approve_teacher(teacher_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_approve_teacher(token, teacher_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.patch("/student/{student_id}", response_model=BasicResponse)
+def admin_disapprove_student(student_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_disapprove_student(token, student_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.patch("/teacher/{teacher_id}", response_model=BasicResponse)
+def admin_disapprove_teacher(teacher_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+    try:
+        return repo.admin_disapprove_teacher(token, teacher_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.delete("/me", response_model=BasicResponse)
+def admin_delete_self(token: str = Depends(admin_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+    try:
+        return repo.delete_user(token)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.delete("/student/{student_id}", response_model=BasicResponse)
+def admin_delete_student(student_id: int, token: str = Depends(admin_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+    try:
+        return repo.delete_user(token, student_id, "Student")
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.delete("/teacher/{teacher_id}", response_model=BasicResponse)
+def admin_delete_teacher(teacher_id: int, token: str = Depends(admin_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+    try:
+        return repo.delete_user(token, teacher_id, "Teacher")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

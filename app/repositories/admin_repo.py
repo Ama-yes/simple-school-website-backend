@@ -163,3 +163,147 @@ class AdminRepository:
         db.refresh(db_admin)
         
         return db_admin
+
+
+    def admin_approve_student(self, token: str, student_id: int):
+        db = self._db
+        
+        result = check_access_token(token)
+        
+        if not result:
+            raise ValueError("Invalid credentials!")
+        
+        if result.get("role") != "Admin":
+            raise ValueError("Unexpected role!")
+        
+        query = db.query(Admin).filter(Admin.email == result.get("sub"))
+        db_admin = query.first()
+        
+        if not db_admin:
+            raise ValueError("Admin doesn't exist!")
+        
+        
+        query = db.query(Student).filter(Student.id == student_id)
+        db_student = query.first()
+        
+        if not db_student:
+            raise ValueError(f"Student account with id '{student_id}' doesn't exist!")
+        
+        
+        if db_student.approved:
+            raise ValueError(f"Student account with id '{student_id}' was already activated!")
+        
+        db_student.approved = True
+        
+        db.add(db_student)
+        db.commit()
+        
+        return {"status": "Completed", "detail": f"Student account with id '{student_id}' has been activated!"}
+
+
+    def admin_disapprove_student(self, token: str, student_id: int):
+        db = self._db
+        
+        result = check_access_token(token)
+        
+        if not result:
+            raise ValueError("Invalid credentials!")
+        
+        if result.get("role") != "Admin":
+            raise ValueError("Unexpected role!")
+        
+        query = db.query(Admin).filter(Admin.email == result.get("sub"))
+        db_admin = query.first()
+        
+        if not db_admin:
+            raise ValueError("Admin doesn't exist!")
+        
+        
+        query = db.query(Student).filter(Student.id == student_id)
+        db_student = query.first()
+        
+        if not db_student:
+            raise ValueError(f"Student account with id '{student_id}' doesn't exist!")
+        
+        
+        if not db_student.approved:
+            raise ValueError(f"Student account with id '{student_id}' was already disactivated or has not been activated yet!")
+        
+        db_student.approved = False
+        
+        db.add(db_student)
+        db.commit()
+        
+        return {"status": "Completed", "detail": f"Student account with id '{student_id}' has been disactivated!"}
+
+
+    def admin_approve_teacher(self, token: str, teacher_id: int):
+        db = self._db
+        
+        result = check_access_token(token)
+        
+        if not result:
+            raise ValueError("Invalid credentials!")
+        
+        if result.get("role") != "Admin":
+            raise ValueError("Unexpected role!")
+        
+        query = db.query(Admin).filter(Admin.email == result.get("sub"))
+        db_admin = query.first()
+        
+        if not db_admin:
+            raise ValueError("Admin doesn't exist!")
+        
+        
+        query = db.query(Teacher).filter(Teacher.id == teacher_id)
+        db_teacher = query.first()
+        
+        if not db_teacher:
+            raise ValueError(f"Teacher account with id '{teacher_id}' doesn't exist!")
+        
+        
+        if db_teacher.approved:
+            raise ValueError(f"Teacher account with id '{teacher_id}' was already activated!")
+        
+        db_teacher.approved = True
+        
+        db.add(db_teacher)
+        db.commit()
+        
+        return {"status": "Completed", "detail": f"Teacher account with id '{teacher_id}' has been activated!"}
+
+
+    def admin_disapprove_teacher(self, token: str, teacher_id: int):
+        db = self._db
+        
+        result = check_access_token(token)
+        
+        if not result:
+            raise ValueError("Invalid credentials!")
+        
+        if result.get("role") != "Admin":
+            raise ValueError("Unexpected role!")
+        
+        query = db.query(Admin).filter(Admin.email == result.get("sub"))
+        db_admin = query.first()
+        
+        if not db_admin:
+            raise ValueError("Admin doesn't exist!")
+        
+        
+        query = db.query(Teacher).filter(Teacher.id == teacher_id)
+        db_teacher = query.first()
+        
+        if not db_teacher:
+            raise ValueError(f"Teacher account with id '{teacher_id}' doesn't exist!")
+        
+        
+        if not db_teacher.approved:
+            raise ValueError(f"Teacher account with id '{teacher_id}' was already disactivated or has not been activated yet!")
+        
+        db_teacher.approved = False
+        
+        db.add(db_teacher)
+        db.commit()
+        
+        return {"status": "Completed", "detail": f"Teacher account with id '{teacher_id}' has been disactivated!"}
