@@ -40,7 +40,7 @@ class AdminRepository:
         return db_subject
 
 
-    def admin_list_students(self, token: str) -> list[Student]:
+    def admin_list_students(self, token: str, skip: int, limit: int) -> list[Student]:
         db = self._db
         
         result = check_access_token(token)
@@ -52,14 +52,14 @@ class AdminRepository:
             raise ValueError("You don't have the permission to perform this action!")
         
         
-        query = db.query(Student)
+        query = db.query(Student).limit(limit).offset(skip)
         
         students = query.all()
         
         return students
 
 
-    def admin_list_teachers(self, token: str) -> list[Teacher]:
+    def admin_list_teachers(self, token: str, skip: int, limit: int) -> list[Teacher]:
         db = self._db
         
         result = check_access_token(token)
@@ -71,14 +71,14 @@ class AdminRepository:
             raise ValueError("You don't have the permission to perform this action!")
         
         
-        query = db.query(Teacher).options(selectinload(Teacher.subjects))
+        query = db.query(Teacher).options(selectinload(Teacher.subjects)).limit(limit).offset(skip)
         
         teachers = query.all()
         
         return teachers
 
 
-    def admin_list_subjects(self, token: str) -> list[Subject]:
+    def admin_list_subjects(self, token: str, skip: int, limit: int) -> list[Subject]:
         db = self._db
         
         result = check_access_token(token)
@@ -90,7 +90,7 @@ class AdminRepository:
             raise ValueError("You don't have the permission to perform this action!")
         
         
-        query = db.query(Subject).options(joinedload(Subject.teacher))
+        query = db.query(Subject).options(joinedload(Subject.teacher)).limit(limit).offset(skip)
         
         subjects = query.all()
         

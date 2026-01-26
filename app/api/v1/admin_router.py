@@ -84,25 +84,25 @@ def admin_add_subject(subject: SubjectInsert, token: str = Depends(admin_oauth2)
 
 
 @router.get("/students", response_model=list[StudentSummary])
-def admin_list_students(token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_list_students(skip: int = 0, limit: int = 10, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_list_students(token)
+        return repo.admin_list_students(token, skip, limit)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.get("/teachers", response_model=list[TeacherBase])
-def admin_list_teachers(token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_list_teachers(skip: int = 0, limit: int = 10, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_list_teachers(token)
+        return repo.admin_list_teachers(token, skip, limit)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.get("/subjects", response_model=list[SubjectSummary])
-def admin_list_subjects(token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_list_subjects(skip: int = 0, limit: int = 10, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_list_subjects(token)
+        return repo.admin_list_subjects(token, skip, limit)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

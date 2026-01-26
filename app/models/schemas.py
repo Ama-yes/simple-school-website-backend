@@ -8,6 +8,17 @@ class ConfirmPassword(BaseModel):
     password: str
     confirm_password: str
     
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) < 8 or value == value.upper() or value == value.lower():
+            raise ValueError("Password is weak!")
+        
+        if len(value) > 32:
+            raise ValueError("Password is too long!")
+        return value
+    
     @model_validator(mode="after")
     def confirm_psswd(self):
         if self.password != self.confirm_password:
@@ -27,6 +38,7 @@ class StudentSigningIn(BaseModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, value: str):
+        value = value.strip()
         if len(value) < 6:
             raise ValueError("Invalid name!")
         return value.lower()
@@ -34,6 +46,7 @@ class StudentSigningIn(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        value = value.strip()
         if len(value) < 4 or '@' not in value:
             raise ValueError("Invalid email!")
         return value.lower()
@@ -41,6 +54,7 @@ class StudentSigningIn(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
+        value = value.strip()
         if len(value) < 8 or value == value.upper() or value == value.lower():
             raise ValueError("Password is weak!")
         
@@ -62,6 +76,7 @@ class StudentLoggingIn(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        value = value.strip()
         if len(value) < 4 or '@' not in value:
             raise ValueError("Invalid email!")
         return value.lower()
@@ -69,6 +84,7 @@ class StudentLoggingIn(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
+        value = value.strip()
         if len(value) < 8 or value == value.upper() or value == value.lower():
             raise ValueError("Password is weak!")
         
@@ -85,6 +101,7 @@ class StudentEdit(BaseModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, value: str):
+        value = value.strip()
         if len(value) < 6:
             raise ValueError("Invalid name!")
         return value.lower()
@@ -92,6 +109,7 @@ class StudentEdit(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        value = value.strip()
         if len(value) < 4 or '@' not in value:
             raise ValueError("Invalid email!")
         return value.lower()
@@ -108,6 +126,7 @@ class TeacherSigningIn(BaseModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, value: str):
+        value = value.strip()
         if len(value) < 6:
             raise ValueError("Invalid name!")
         return value.lower()
@@ -115,6 +134,7 @@ class TeacherSigningIn(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        value = value.strip()
         if len(value) < 4 or '@' not in value:
             raise ValueError("Invalid email!")
         return value.lower()
@@ -122,6 +142,7 @@ class TeacherSigningIn(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
+        value = value.strip()
         if len(value) < 8 or value == value.upper() or value == value.lower():
             raise ValueError("Password is weak!")
         
@@ -143,6 +164,7 @@ class TeacherLoggingIn(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        value = value.strip()
         if len(value) < 4 or '@' not in value:
             raise ValueError("Invalid email!")
         return value.lower()
@@ -150,6 +172,7 @@ class TeacherLoggingIn(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
+        value = value.strip()
         if len(value) < 8 or value == value.upper() or value == value.lower():
             raise ValueError("Password is weak!")
         
@@ -165,6 +188,7 @@ class TeacherEdit(BaseModel):
     @field_validator("name")
     @classmethod
     def validate_name(cls, value: str):
+        value = value.strip()
         if len(value) < 6:
             raise ValueError("Invalid name!")
         return value.lower()
@@ -172,6 +196,7 @@ class TeacherEdit(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        value = value.strip()
         if len(value) < 4 or '@' not in value:
             raise ValueError("Invalid email!")
         return value.lower()
@@ -188,6 +213,7 @@ class AdminSigningIn(BaseModel):
     @field_validator("username")
     @classmethod
     def validate_username(cls, value: str):
+        value = value.strip()
         if len(value) < 6:
             raise ValueError("Invalid username!")
         return value.lower()
@@ -195,6 +221,7 @@ class AdminSigningIn(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        value = value.strip()
         if len(value) < 4 or '@' not in value:
             raise ValueError("Invalid email!")
         return value.lower()
@@ -202,6 +229,7 @@ class AdminSigningIn(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
+        value = value.strip()
         if len(value) < 8 or value == value.upper() or value == value.lower():
             raise ValueError("Password is weak!")
         
@@ -223,7 +251,7 @@ class AdminLoggingIn(BaseModel):
     @field_validator("username")
     @classmethod
     def validate_username(cls, value: str):
-        return value.lower()
+        return value.lower().strip()
 
 
 class AdminEdit(BaseModel):
@@ -233,6 +261,7 @@ class AdminEdit(BaseModel):
     @field_validator("username")
     @classmethod
     def validate_username(cls, value: str):
+        value = value.strip()
         if len(value) < 6:
             raise ValueError("Invalid username!")
         return value.lower()
@@ -240,6 +269,7 @@ class AdminEdit(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str):
+        value = value.strip()
         if len(value) < 4 or '@' not in value:
             raise ValueError("Invalid email!")
         return value.lower()
@@ -275,7 +305,7 @@ class SubjectInsert(BaseModel):
     @field_validator("subject_name")
     @classmethod
     def validate_username(cls, value: str):
-        return value.upper()
+        return value.upper().strip()
 
 
 
