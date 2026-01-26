@@ -115,7 +115,6 @@ class TeacherRepository:
         
         db_grade.value = grade.value
         db_grade.number = grade.number
-        db_grade.subject_id = db_subject.id
         
         db.add(db_grade)
         db.commit()
