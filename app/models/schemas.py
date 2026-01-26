@@ -278,8 +278,15 @@ class AdminEdit(BaseModel):
 
 ## Grade ##
 class GradeInsert(BaseModel):
+    student_id: int
+    subject: str
     value: float
     number: int
+    
+    @field_validator("subject_name")
+    @classmethod
+    def validate_username(cls, value: str):
+        return value.upper().strip()
     
     @field_validator("value")
     @classmethod
@@ -347,6 +354,7 @@ class StudentSummary(BaseModel):
 
 class GradeForTch(BaseModel):
     student: StudentSummary
+    subject: str
     value: float
     number: int
     model_config = ConfigDict(from_attributes=True)

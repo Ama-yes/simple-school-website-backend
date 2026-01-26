@@ -66,19 +66,27 @@ def teacher_verify_token_reset_psswrd(reset_token: str, password: ConfirmPasswor
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
+@router.post("/grade/{student_id}", response_model=GradeForTch)
+def teacher_grade_student(grade: GradeInsert, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+    try:
+        return repo.teacher_grade_student(token, grade)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.patch("/grade/{student_id}", response_model=GradeForTch)
+def teacher_edit_grade(grade: GradeInsert, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+    try:
+        return repo.teacher_edit_grade(token, grade)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
 @router.get("/me", response_model=TeacherBase)
 def student_check_profile(token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
     try:
         student = repo.verify_refresh_token(token)
         return student
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
-
-
-@router.post("/grade/{student_id}", response_model=GradeForTch)
-def teacher_grade_student(student_id: int, subject: str, grade: GradeInsert, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
-    try:
-        return repo.teacher_grade_student(token, student_id, subject.upper(), grade)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

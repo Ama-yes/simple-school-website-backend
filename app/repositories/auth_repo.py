@@ -1,4 +1,4 @@
-from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token, check_refresh_token
+from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token, check_refresh_token, check_access_token
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.models.schemas import AdminLoggingIn, AdminSigningIn, StudentLoggingIn, StudentSigningIn, TeacherLoggingIn, TeacherSigningIn, ConfirmPassword
@@ -187,13 +187,10 @@ class AuthRepository:
     def delete_user(self, token: str, todelete_id = None, user_type = None):
         role = self._role
         
-        result = check_refresh_token(token)
+        result = check_access_token(token)
         
         if not result:
             raise ValueError("Invalid credentials!")
-        
-        if not result.get("version"):
-            raise ValueError("Invalid token type!")
         
         if result.get("role") != role:
             raise ValueError("Unexpected role!")
