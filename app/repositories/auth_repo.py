@@ -1,9 +1,12 @@
-from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token
+from app.core.security import password_hashing, check_password, create_access_token, create_refresh_token, check_refresh_token
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from app.models.schemas import AdminLoggingIn, AdminSigningIn, StudentLoggingIn, StudentSigningIn, TeacherLoggingIn, TeacherSigningIn
+from app.models.schemas import AdminLoggingIn, AdminSigningIn, StudentLoggingIn, StudentSigningIn, TeacherLoggingIn, TeacherSigningIn, ConfirmPassword
 from app.models.models import Admin, Teacher, Student
-
+from app.core.config import settings
+from app.worker.tasks import send_email
+from datetime import datetime, timedelta
+import uuid
 
 
 
@@ -63,3 +66,121 @@ class AuthRepository:
         refresh_token = create_refresh_token({"sub": db_user.email, "version": db_user.token_version, "role": role})
         
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
+
+
+    def verify_refresh_token(self, token) -> Student | Admin | Teacher:
+        role = self._role
+        
+        result = check_refresh_token(token)
+        
+        if not result:
+            raise ValueError("Invalid credentials!")
+        
+        if not result.get("version"):
+            raise ValueError("Invalid token type!")
+        
+        if result.get("role") != role:
+            raise ValueError("Unexpected role!")
+        
+        email = result["sub"]
+        token_v = result["version"]
+        
+        db = self._db
+        
+        match role:
+            case "Teacher":
+                query = db.query(Teacher).filter(Teacher.email == email)
+            case "Student":
+                query = db.query(Student).filter(Student.email == email)
+            case "Admin":
+                query = db.query(Admin).filter(Admin.email == email)
+        
+        db_user = query.first()
+        
+        if not db_user:
+            raise ValueError("Invalid credentials!")
+        
+        if db_user.token_version != token_v:
+            raise ValueError("Invalid token version!")
+        
+        return db_user
+        
+        
+    def change_password(self, new_psswrd: ConfirmPassword, token: str):
+        db = self._db
+        db_user = self.verify_refresh_token(token)
+        
+        db_user.token_version += 1
+        db_user.hashed_password = password_hashing(password=new_psswrd.password) 
+        db.add(db_user)
+        db.commit()
+        
+        return {"status": "Completed", "detail": "Log back in necessary!"}
+    
+    
+    def token_refresh(self, token: str):
+        role = self._role
+        
+        db_user = self.verify_refresh_token(token)
+        
+        access_token = create_access_token({"sub": db_user.email, "role": role})
+        
+        return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
+    
+    
+    def reset_password(self, email: str):
+        db = self._db
+        role = self._role
+        
+        match role:
+            case "Teacher":
+                query = db.query(Teacher).filter(Teacher.email == email)
+            case "Student":
+                query = db.query(Student).filter(Student.email == email)
+            case "Admin":
+                query = db.query(Admin).filter(Admin.email == email)
+        
+        db_user = query.first()        
+        
+        if not db_user:
+            raise ValueError(f"{email} is not linked to any account!")
+        
+        reset_token = str(uuid.uuid4())
+        
+        db_user.reset_token = reset_token
+        db_user.reset_token_expire = datetime.now() + timedelta(minutes=15)
+        
+        db.commit()
+        
+        link = f"{settings.hostname}/{role.lower()}/password-resetting/{reset_token}"
+        
+        send_email.apply_async(args=(email, f"Hey {db_user.name if db_user.name else db_user.username},\nClick below to reset your password:\n{link}\nNOTE: THIS ISN'T A CLICKABLE LINK, YOU SHOULD SEND A 'POST' REQUEST TO IT INCLUDING THE NEW PASSWORD!", "Password Reset Request"), expires=30, countdown=5)
+        
+        return {"status": "Completed", "detail": "Email sent in the backgroud!"}
+    
+    
+    def verify_reset_token(self, token: str, psswrd: ConfirmPassword):
+        db = self._db
+        role = self._role
+        
+        match role:
+            case "Teacher":
+                query = db.query(Teacher).filter(Teacher.reset_token == token)
+            case "Student":
+                query = db.query(Student).filter(Student.reset_token == token)
+            case "Admin":
+                query = db.query(Admin).filter(Admin.reset_token == token)
+        
+        db_user = query.first()
+        
+        if not db_user or db_user.reset_token_expire < datetime.now():
+            raise ValueError("Invalid link!")
+        
+        db_user.token_version += 1
+        db_user.hashed_password = password_hashing(psswrd.password) 
+        db_user.reset_token = None
+        db_user.reset_token_expire = None
+        db.add(db_user)
+        db.commit()
+        
+        return {"status": "Completed", "detail": "Log back in necessary!"}

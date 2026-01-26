@@ -3,6 +3,19 @@ from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 
 # ---- Validation Models ---- #
+## Mist ##
+class ConfirmPassword(BaseModel):
+    password: str
+    confirm_password: str
+    
+    @model_validator(mode="after")
+    def confirm_psswd(self):
+        if self.password != self.confirm_password:
+            raise ValueError("Password confirmation mismatch!")
+        return self
+
+
+
 ## Student ##
 class StudentSigningIn(BaseModel):
     name: str
@@ -174,6 +187,8 @@ class AdminLoggingIn(BaseModel):
         return value.lower()
 
 
+
+## Grade ##
 class GradeInsert(BaseModel):
     value: float
     number: int
@@ -193,6 +208,8 @@ class GradeInsert(BaseModel):
         return value
 
 
+
+## Subject ##
 class SubjectInsert(BaseModel):
     subject_name: str
     teacher_id: int | None

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.schemas import Token, AdminLoggingIn, AdminSigningIn, SubjectSummary, SubjectInsert, BasicResponse
+from app.models.schemas import Token, AdminLoggingIn, AdminSigningIn, SubjectSummary, SubjectInsert, BasicResponse, ConfirmPassword
 from app.repositories.admin_repo import AdminRepository
 from app.repositories.auth_repo import AuthRepository
 from app.core.dependencies import get_database
@@ -35,33 +35,33 @@ def admin_login(user: AdminLoggingIn, repo: AuthRepository = Depends(get_auth_re
 
 
 @router.post("/change-password", response_model=BasicResponse)
-def admin_change_password(new_password: str, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_change_password(new_password: ConfirmPassword, token: str = Depends(admin_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.admin_change_password(new_password, token)
+        return repo.change_password(new_password, token)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/refresh", response_model=Token)
-def admin_token_refresh(token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_token_refresh(token: str = Depends(admin_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.admin_token_refresh(token)
+        return repo.token_refresh(token)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/resetpassword", response_model=BasicResponse)
-def admin_reset_password(email: str, repo: AdminRepository = Depends(get_admin_repo)):
+def admin_reset_password(email: str, repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.admin_reset_password(email)
+        return repo.reset_password(email)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/password-resetting/{reset_token}", response_model=BasicResponse)
-def admin_verify_reset_token(reset_token: str, password: str, repo: AdminRepository = Depends(get_admin_repo)):
+def admin_verify_reset_token(reset_token: str, password: ConfirmPassword, repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.admin_verify_reset_token(reset_token, password)
+        return repo.verify_reset_token(reset_token, password)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

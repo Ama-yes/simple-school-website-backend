@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse
+from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse, ConfirmPassword
 from app.models.models import Teacher
 from app.repositories.teacher_repo import TeacherRepository
 from app.repositories.auth_repo import AuthRepository
@@ -36,33 +36,33 @@ def teacher_login(user: TeacherLoggingIn, repo: AuthRepository = Depends(get_aut
 
 
 @router.post("/change-password", response_model=BasicResponse)
-def teacher_change_password(new_password: str, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_change_password(new_password: ConfirmPassword, token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.teacher_change_password(new_password, token)
+        return repo.change_password(new_password, token)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/refresh", response_model=Token)
-def teacher_token_refresh(token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_token_refresh(token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.teacher_token_refresh(token)
+        return repo.token_refresh(token)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/resetpassword", response_model=BasicResponse)
-def teacher_reset_password(email: str, repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_reset_password(email: str, repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.teacher_reset_password(email)
+        return repo.reset_password(email)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/password-resetting/{reset_token}", response_model=BasicResponse)
-def teacher_verify_reset_token(reset_token: str, password: str, repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_verify_reset_token(reset_token: str, password: ConfirmPassword, repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.teacher_verify_reset_token(reset_token, password)
+        return repo.verify_reset_token(reset_token, password)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
