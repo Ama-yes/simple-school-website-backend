@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 
 # ---- Validation Models ---- #
-## Mist ##
+## Misc ##
 class ConfirmPassword(BaseModel):
     password: str
     confirm_password: str

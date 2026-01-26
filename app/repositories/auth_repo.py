@@ -154,7 +154,7 @@ class AuthRepository:
         
         link = f"{settings.hostname}/{role.lower()}/password-resetting/{reset_token}"
         
-        send_email.apply_async(args=(email, f"Hey {db_user.name if db_user.name else db_user.username},\nClick below to reset your password:\n{link}\nNOTE: THIS ISN'T A CLICKABLE LINK, YOU SHOULD SEND A 'POST' REQUEST TO IT INCLUDING THE NEW PASSWORD!", "Password Reset Request"), expires=30, countdown=5)
+        send_email.apply_async(args=(email, f"Hey {db_user.username if role == 'Admin' else db_user.name},\nClick below to reset your password:\n{link}\nNOTE: THIS ISN'T A CLICKABLE LINK, YOU SHOULD SEND A 'POST' REQUEST TO IT INCLUDING THE NEW PASSWORD!", "Password Reset Request"), expires=600, countdown=5)
         
         return {"status": "Completed", "detail": "Email sent in the backgroud!"}
     
