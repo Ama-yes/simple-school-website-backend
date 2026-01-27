@@ -1,4 +1,4 @@
-from app.models.schemas import GradeInsert, TeacherEdit
+from app.models.schemas import GradeInsert, TeacherEdit, GradeDelete
 from app.models.models import Teacher, Student, Grade, Subject
 from app.core.security import password_hashing, check_access_token, create_access_token, create_refresh_token, check_refresh_token
 from sqlalchemy.orm import Session, joinedload, selectinload
@@ -8,7 +8,7 @@ class TeacherRepository:
     def __init__(self, session: Session):
         self._db = session
 
-    def teacher_grade_student(self, token, grade: GradeInsert):
+    def teacher_grade_student(self, token: str, grade: GradeInsert):
         db = self._db
         
         result = check_access_token(token)
@@ -67,7 +67,7 @@ class TeacherRepository:
         # or return {"student": {"id": int, "name": str, "email": str, "school_year": int}, "subject": subject, "value": grade.value, "number": grade.number}
 
 
-    def teacher_edit_grade(self, token, grade: GradeInsert):
+    def teacher_edit_grade(self, token: str, grade: GradeInsert):
         db = self._db
         
         result = check_access_token(token)
@@ -120,6 +120,52 @@ class TeacherRepository:
         db.commit()
         
         return {"student": db_student, "subject": grade.subject, "value": grade.value, "number": grade.number}
+
+
+    def teacher_delete_grade(self, token: str, grade: GradeDelete):
+        db = self._db
+        
+        result = check_access_token(token)
+        
+        if not result:
+            raise ValueError("Invalid credentials!")
+        
+        if result.get("role") != "Teacher":
+            raise ValueError("You don't have the permission to perform this action!")
+        
+        
+        query = db.query(Teacher).filter(Teacher.email == result.get("sub")).options(selectinload(Teacher.subjects))
+        db_teacher = query.first()
+        
+        if not db_teacher:
+            raise ValueError("Teacher doesn't exist!")
+        
+        if db_teacher.subjects:
+            subjects = db_teacher.subjects
+        else:
+            raise ValueError(f"{db_teacher.name} has no subjects assigned!")
+        
+        if not grade.subject in [subj.subject_name for subj in subjects]:
+            raise ValueError(f"{db_teacher.name} doesn't teach {grade.subject}!")
+        
+        
+        query = db.query(Student).filter(Student.id == grade.student_id).options(selectinload(Student.grades).joinedload(Grade.subject))
+        db_student = query.first()
+        
+        if not db_student:
+            raise ValueError(f"Student with id '{grade.student_id}' doesn't exist!")
+        
+        db_student_grades = [grd for grd in db_student.grades if grade.subject == grd.subject.subject_name]
+        
+        db_grade = [grd for grd in db_student_grades if grd.number == grade.number][0]
+        
+        if not db_grade:
+            raise ValueError("Grade doesn't exists!")
+        
+        db.delete(db_grade)
+        db.commit()
+        
+        return {"status": "Completed", "detail": f"Grade number '{grade.number}' of subject '{grade.subject}' has been deleted from {db_student.name}!"}
 
 
     def teacher_modify_profile(self, token: str, data: TeacherEdit) -> Teacher:

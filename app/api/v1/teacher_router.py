@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse, ConfirmPassword, TeacherBase, TeacherEdit
+from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse, ConfirmPassword, TeacherBase, TeacherEdit, GradeDelete
 from app.repositories.teacher_repo import TeacherRepository
 from app.repositories.auth_repo import AuthRepository
 from app.core.dependencies import get_database
@@ -78,6 +78,14 @@ def teacher_grade_student(grade: GradeInsert, token: str = Depends(teacher_oauth
 def teacher_edit_grade(grade: GradeInsert, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
         return repo.teacher_edit_grade(token, grade)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.delete("/grade/{student_id}", response_model=BasicResponse)
+def teacher_delete_grade(grade: GradeDelete, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+    try:
+        return repo.teacher_delete_grade(token, grade)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

@@ -66,7 +66,7 @@ class AuthRepository:
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
 
-    def verify_refresh_token(self, token) -> Student | Admin | Teacher:
+    def verify_refresh_token(self, token: str) -> Student | Admin | Teacher:
         role = self._role
         
         result = check_refresh_token(token)

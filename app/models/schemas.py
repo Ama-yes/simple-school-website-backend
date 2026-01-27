@@ -303,6 +303,24 @@ class GradeInsert(BaseModel):
         return value
 
 
+class GradeDelete(BaseModel):
+    student_id: int
+    subject: str
+    number: int
+    
+    @field_validator("subject_name")
+    @classmethod
+    def validate_username(cls, value: str):
+        return value.upper().strip()
+    
+    @field_validator("number")
+    @classmethod
+    def validate_number(cls, value: int):
+        if value < 0 or value > 100:
+            raise ValueError("Invalid grade number!")
+        return value
+
+
 
 ## Subject ##
 class SubjectInsert(BaseModel):

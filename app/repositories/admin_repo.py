@@ -97,7 +97,7 @@ class AdminRepository:
         return subjects
 
 
-    def admin_assign_subject_to_teacher(self, token, subject_id, teacher_id):
+    def admin_assign_subject_to_teacher(self, token: str, subject_id: int, teacher_id: int):
         db = self._db
         
         result = check_access_token(token)
