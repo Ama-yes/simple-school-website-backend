@@ -126,7 +126,7 @@ def admin_modify_profile(data: AdminEdit, token: str = Depends(admin_oauth2), re
 @router.patch("/student/{student_id}", response_model=BasicResponse)
 def admin_approve_student(student_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_approve_student(token, student_id)
+        return repo.admin_approve_user(token, student_id, "Student")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
@@ -134,7 +134,7 @@ def admin_approve_student(student_id: int, token: str = Depends(admin_oauth2), r
 @router.patch("/teacher/{teacher_id}", response_model=BasicResponse)
 def admin_approve_teacher(teacher_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_approve_teacher(token, teacher_id)
+        return repo.admin_approve_user(token, teacher_id, "Teacher")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
@@ -142,7 +142,7 @@ def admin_approve_teacher(teacher_id: int, token: str = Depends(admin_oauth2), r
 @router.patch("/student/{student_id}", response_model=BasicResponse)
 def admin_disapprove_student(student_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_disapprove_student(token, student_id)
+        return repo.admin_disapprove_user(token, student_id, "Student")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
@@ -150,7 +150,7 @@ def admin_disapprove_student(student_id: int, token: str = Depends(admin_oauth2)
 @router.patch("/teacher/{teacher_id}", response_model=BasicResponse)
 def admin_disapprove_teacher(teacher_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_disapprove_teacher(token, teacher_id)
+        return repo.admin_disapprove_user(token, teacher_id, "Teacher")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
