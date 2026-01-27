@@ -92,7 +92,7 @@ def student_modify_profile(data: StudentEdit, token: str = Depends(student_oauth
 
 
 @router.delete("/me", response_model=BasicResponse)
-def admin_delete_self(token: str = Depends(student_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def student_delete_self(token: str = Depends(student_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
     try:
         return repo.delete_user(token)
     except ValueError as e:

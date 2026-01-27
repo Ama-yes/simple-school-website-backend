@@ -91,7 +91,7 @@ def teacher_delete_grade(grade: GradeDelete, token: str = Depends(teacher_oauth2
 
 
 @router.get("/me", response_model=TeacherBase)
-def student_check_profile(token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def teacher_check_profile(token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
     try:
         student = repo.verify_refresh_token(token)
         return student
@@ -100,7 +100,7 @@ def student_check_profile(token: str = Depends(teacher_oauth2), repo: AuthReposi
 
 
 @router.patch("/me", response_model=TeacherBase)
-def admin_modify_profile(data: TeacherEdit, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_modify_profile(data: TeacherEdit, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
         return repo.teacher_modify_profile(token, data)
     except ValueError as e:
@@ -108,7 +108,7 @@ def admin_modify_profile(data: TeacherEdit, token: str = Depends(teacher_oauth2)
 
 
 @router.delete("/me", response_model=BasicResponse)
-def admin_delete_self(token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def teacher_delete_self(token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
     try:
         return repo.delete_user(token)
     except ValueError as e:

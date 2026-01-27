@@ -123,7 +123,7 @@ def admin_modify_profile(data: AdminEdit, token: str = Depends(admin_oauth2), re
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.patch("/student/{student_id}", response_model=BasicResponse)
+@router.patch("/student/{student_id}/approve", response_model=BasicResponse)
 def admin_approve_student(student_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_approve_user(token, student_id, "Student")
@@ -131,7 +131,7 @@ def admin_approve_student(student_id: int, token: str = Depends(admin_oauth2), r
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.patch("/teacher/{teacher_id}", response_model=BasicResponse)
+@router.patch("/teacher/{teacher_id}/approve", response_model=BasicResponse)
 def admin_approve_teacher(teacher_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_approve_user(token, teacher_id, "Teacher")
@@ -139,7 +139,7 @@ def admin_approve_teacher(teacher_id: int, token: str = Depends(admin_oauth2), r
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.patch("/student/{student_id}", response_model=BasicResponse)
+@router.patch("/student/{student_id}/disapprove", response_model=BasicResponse)
 def admin_disapprove_student(student_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_disapprove_user(token, student_id, "Student")
@@ -147,7 +147,7 @@ def admin_disapprove_student(student_id: int, token: str = Depends(admin_oauth2)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.patch("/teacher/{teacher_id}", response_model=BasicResponse)
+@router.patch("/teacher/{teacher_id}/disapprove", response_model=BasicResponse)
 def admin_disapprove_teacher(teacher_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_disapprove_user(token, teacher_id, "Teacher")
