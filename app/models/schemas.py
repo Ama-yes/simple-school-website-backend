@@ -283,7 +283,7 @@ class GradeInsert(BaseModel):
     value: float
     number: int
     
-    @field_validator("subject_name")
+    @field_validator("subject")
     @classmethod
     def validate_username(cls, value: str):
         return value.upper().strip()
@@ -308,7 +308,7 @@ class GradeDelete(BaseModel):
     subject: str
     number: int
     
-    @field_validator("subject_name")
+    @field_validator("subject")
     @classmethod
     def validate_username(cls, value: str):
         return value.upper().strip()
