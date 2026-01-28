@@ -75,7 +75,7 @@ class TeacherRepository:
         if not db_student_grades:
             raise ValueError(f"Student with id '{grade.student_id}' has no grades!")
         
-        db_grade = [grd for grd in db_student_grades if grd.number == grade.number][0]
+        db_grade = next((grd for grd in db_student_grades if grd.number == grade.number), None)
         
         if not db_grade:
             raise ValueError("Grade doesn't exists!")
@@ -118,7 +118,7 @@ class TeacherRepository:
         if not db_student_grades:
             raise ValueError(f"Student with id '{grade.student_id}' has no grades!")
         
-        db_grade = [grd for grd in db_student_grades if grd.number == grade.number][0]
+        db_grade = next((grd for grd in db_student_grades if grd.number == grade.number), None)
         
         if not db_grade:
             raise ValueError("Grade doesn't exists!")
