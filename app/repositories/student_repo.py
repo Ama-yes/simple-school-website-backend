@@ -1,6 +1,6 @@
 from app.models.schemas import StudentEdit
-from app.models.models import Student
-from sqlalchemy.orm import Session
+from app.models.models import Student, Grade
+from sqlalchemy.orm import Session, selectinload, joinedload
 
 
 class StudentRepository:
@@ -24,3 +24,13 @@ class StudentRepository:
         db.refresh(current_student)
         
         return current_student
+    
+    
+    def student_grades_check(self, current_student: Student) -> list[Grade]:
+        db = self._db
+        
+        query = db.query(Grade).filter(Grade.student_id == current_student.id).options(joinedload(Grade.subject))
+        
+        db_grades = query.all()
+        
+        return db_grades

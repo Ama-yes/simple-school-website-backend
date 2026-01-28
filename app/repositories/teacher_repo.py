@@ -72,6 +72,9 @@ class TeacherRepository:
         
         db_student_grades = [grd for grd in db_student.grades if grade.subject == grd.subject.subject_name]
         
+        if not db_student_grades:
+            raise ValueError(f"Student with id '{grade.student_id}' has no grades!")
+        
         db_grade = [grd for grd in db_student_grades if grd.number == grade.number][0]
         
         if not db_grade:
@@ -112,6 +115,9 @@ class TeacherRepository:
         
         db_student_grades = [grd for grd in db_student.grades if grade.subject == grd.subject.subject_name]
         
+        if not db_student_grades:
+            raise ValueError(f"Student with id '{grade.student_id}' has no grades!")
+        
         db_grade = [grd for grd in db_student_grades if grd.number == grade.number][0]
         
         if not db_grade:
@@ -121,6 +127,16 @@ class TeacherRepository:
         db.commit()
         
         return {"status": "Completed", "detail": f"Grade number '{grade.number}' of subject '{grade.subject}' has been deleted from {db_student.name}!"}
+    
+    
+    def teacher_list_subjects(self, current_teacher: Teacher) -> list[Subject]:
+        db = self._db
+        
+        query = db.query(Subject).filter(Subject.teacher_id == current_teacher.id)
+        
+        db_subjects = query.all()
+        
+        return db_subjects
 
 
     def teacher_modify_profile(self, current_teacher: Teacher, data: TeacherEdit) -> Teacher:

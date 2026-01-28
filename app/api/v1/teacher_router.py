@@ -90,9 +90,9 @@ def teacher_delete_grade(grade: GradeDelete, current_teacher: Teacher = Depends(
 
 
 @router.get("/subjects", response_model=list[SubjectMinimal])
-def admin_list_subjects(current_teacher: Teacher = Depends(get_current_teacher)):
+def teacher_list_subjects(current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        return current_teacher.subjects
+        return repo.teacher_list_subjects(current_teacher)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

@@ -74,9 +74,9 @@ def student_check_profile(current_student: Student = Depends(get_current_student
 
 
 @router.get("/grades", response_model=list[GradeForStd])
-def student_grades_check(current_student: Student = Depends(get_current_student)):
+def student_grades_check(current_student: Student = Depends(get_current_student), repo: StudentRepository = Depends(get_student_repo)):
     try:
-        return current_student.grades
+        return repo.student_grades_check(current_student)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
