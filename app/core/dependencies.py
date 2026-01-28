@@ -1,12 +1,15 @@
 from app.db.database import localSession
 from fastapi import Depends
-from app.api.v1.student_router import student_oauth2
-from app.api.v1.admin_router import admin_oauth2
-from app.api.v1.teacher_router import teacher_oauth2
+from fastapi.security import OAuth2PasswordBearer
 from app.core.security import check_access_token
 from sqlalchemy.orm import Session
 from app.models.models import Student, Admin, Teacher
 
+
+
+admin_oauth2 = OAuth2PasswordBearer("/admin/login")
+student_oauth2 = OAuth2PasswordBearer("/student/login")
+teacher_oauth2 = OAuth2PasswordBearer("/teacher/login")
 
 
 def get_database():
@@ -66,7 +69,7 @@ def get_current_admin(token: str = Depends(admin_oauth2), db: Session = Depends(
         raise ValueError("Invalid credentials!")
         
     if result.get("role") != "Admin":
-        raise ValueError("Unexpected role!")
+        raise ValueError("Unexpected role!") # or ValueError("You don't have the permission to perform this action!")
         
     email = result["sub"]
         

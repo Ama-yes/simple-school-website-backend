@@ -348,6 +348,12 @@ class TeacherSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class SubjectMinimal(BaseModel):
+    id: int
+    subject_name: str
+    model_config = ConfigDict(from_attributes=True)
+
+
 class SubjectSummary(BaseModel):
     id: int
     subject_name: str

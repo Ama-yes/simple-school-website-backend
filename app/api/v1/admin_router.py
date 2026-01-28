@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from app.models.models import Admin
 from app.models.schemas import Token, AdminLoggingIn, AdminSigningIn, SubjectSummary, SubjectInsert, BasicResponse, ConfirmPassword, AdminBase, StudentSummary, TeacherBase, AdminEdit
 from app.repositories.admin_repo import AdminRepository
 from app.repositories.auth_repo import AuthRepository
-from app.core.dependencies import get_database
+from app.core.dependencies import get_database, get_current_admin, admin_oauth2
 from sqlalchemy.orm import Session
-from fastapi.security import OAuth2PasswordBearer
 
 
 router = APIRouter()
 
-admin_oauth2 = OAuth2PasswordBearer("/admin/login")
 
 def get_admin_repo(db: Session = Depends(get_database)):
     return AdminRepository(db)
@@ -67,114 +66,113 @@ def admin_verify_token_reset_psswrd(reset_token: str, password: ConfirmPassword,
 
 
 @router.get("/me", response_model=AdminBase)
-def student_check_profile(token: str = Depends(admin_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def admin_check_profile(current_admin: Admin = Depends(get_current_admin)):
     try:
-        student = repo.verify_refresh_token(token)
-        return student
+        return current_admin
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/add-subject", response_model=SubjectSummary)
-def admin_add_subject(subject: SubjectInsert, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_add_subject(subject: SubjectInsert, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_add_subject(token, subject)
+        return repo.admin_add_subject(subject)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.get("/students", response_model=list[StudentSummary])
-def admin_list_students(skip: int = 0, limit: int = 10, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_list_students(skip: int = 0, limit: int = 10, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_list_students(token, skip, limit)
+        return repo.admin_list_students(skip, limit)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.get("/teachers", response_model=list[TeacherBase])
-def admin_list_teachers(skip: int = 0, limit: int = 10, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_list_teachers(skip: int = 0, limit: int = 10, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_list_teachers(token, skip, limit)
+        return repo.admin_list_teachers(skip, limit)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.get("/subjects", response_model=list[SubjectSummary])
-def admin_list_subjects(skip: int = 0, limit: int = 10, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_list_subjects(skip: int = 0, limit: int = 10, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_list_subjects(token, skip, limit)
+        return repo.admin_list_subjects(skip, limit)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/assign-subject", response_model=BasicResponse)
-def admin_assign_subject_to_teacher(subject_id: int, teacher_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_assign_subject_to_teacher(subject_id: int, teacher_id: int, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_assign_subject_to_teacher(token, subject_id, teacher_id)
+        return repo.admin_assign_subject_to_teacher(subject_id, teacher_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.patch("/me", response_model=AdminBase)
-def admin_modify_profile(data: AdminEdit, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_modify_profile(data: AdminEdit, current_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_modify_profile(token, data)
+        return repo.admin_modify_profile(current_admin, data)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.patch("/student/{student_id}/approve", response_model=BasicResponse)
-def admin_approve_student(student_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_approve_student(student_id: int, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_approve_user(token, student_id, "Student")
+        return repo.admin_approve_user(student_id, "Student")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.patch("/teacher/{teacher_id}/approve", response_model=BasicResponse)
-def admin_approve_teacher(teacher_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_approve_teacher(teacher_id: int, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_approve_user(token, teacher_id, "Teacher")
+        return repo.admin_approve_user(teacher_id, "Teacher")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.patch("/student/{student_id}/disapprove", response_model=BasicResponse)
-def admin_disapprove_student(student_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_disapprove_student(student_id: int, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_disapprove_user(token, student_id, "Student")
+        return repo.admin_disapprove_user(student_id, "Student")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.patch("/teacher/{teacher_id}/disapprove", response_model=BasicResponse)
-def admin_disapprove_teacher(teacher_id: int, token: str = Depends(admin_oauth2), repo: AdminRepository = Depends(get_admin_repo)):
+def admin_disapprove_teacher(teacher_id: int, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
-        return repo.admin_disapprove_user(token, teacher_id, "Teacher")
+        return repo.admin_disapprove_user(teacher_id, "Teacher")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.delete("/me", response_model=BasicResponse)
-def admin_delete_self(token: str = Depends(admin_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def admin_delete_self(current_admin: Admin = Depends(get_current_admin), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.delete_user(token)
+        return repo.delete_user(current_admin)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.delete("/student/{student_id}", response_model=BasicResponse)
-def admin_delete_student(student_id: int, token: str = Depends(admin_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def admin_delete_student(student_id: int, current_admin: Admin = Depends(get_current_admin), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.delete_user(token, student_id, "Student")
+        return repo.delete_user(current_admin, student_id, "Student")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.delete("/teacher/{teacher_id}", response_model=BasicResponse)
-def admin_delete_teacher(teacher_id: int, token: str = Depends(admin_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def admin_delete_teacher(teacher_id: int, current_admin: Admin = Depends(get_current_admin), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.delete_user(token, teacher_id, "Teacher")
+        return repo.delete_user(current_admin, teacher_id, "Teacher")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

@@ -1,7 +1,7 @@
 from app.models.schemas import GradeInsert, TeacherEdit, GradeDelete
 from app.models.models import Teacher, Student, Grade, Subject
-from app.core.security import password_hashing, check_access_token, create_access_token, create_refresh_token, check_refresh_token
-from sqlalchemy.orm import Session, joinedload, selectinload
+from app.core.security import check_access_token
+from sqlalchemy.orm import Session, selectinload
 
 
 class TeacherRepository:
@@ -67,31 +67,16 @@ class TeacherRepository:
         # or return {"student": {"id": int, "name": str, "email": str, "school_year": int}, "subject": subject, "value": grade.value, "number": grade.number}
 
 
-    def teacher_edit_grade(self, token: str, grade: GradeInsert):
+    def teacher_edit_grade(self, current_teacher: Teacher, grade: GradeInsert):
         db = self._db
         
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Teacher":
-            raise ValueError("You don't have the permission to perform this action!")
-        
-        
-        query = db.query(Teacher).filter(Teacher.email == result.get("sub")).options(selectinload(Teacher.subjects))
-        db_teacher = query.first()
-        
-        if not db_teacher:
-            raise ValueError("Teacher doesn't exist!")
-        
-        if db_teacher.subjects:
-            subjects = db_teacher.subjects
+        if current_teacher.subjects:
+            subjects = current_teacher.subjects
         else:
-            raise ValueError(f"{db_teacher.name} has no subjects assigned!")
+            raise ValueError(f"{current_teacher.name} has no subjects assigned!")
         
         if not grade.subject in [subj.subject_name for subj in subjects]:
-            raise ValueError(f"{db_teacher.name} doesn't teach {grade.subject}!")
+            raise ValueError(f"{current_teacher.name} doesn't teach {grade.subject}!")
         
         
         query = db.query(Student).filter(Student.id == grade.student_id).options(selectinload(Student.grades).joinedload(Grade.subject))
@@ -122,31 +107,16 @@ class TeacherRepository:
         return {"student": db_student, "subject": grade.subject, "value": grade.value, "number": grade.number}
 
 
-    def teacher_delete_grade(self, token: str, grade: GradeDelete):
+    def teacher_delete_grade(self, current_teacher: Teacher, grade: GradeDelete):
         db = self._db
         
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Teacher":
-            raise ValueError("You don't have the permission to perform this action!")
-        
-        
-        query = db.query(Teacher).filter(Teacher.email == result.get("sub")).options(selectinload(Teacher.subjects))
-        db_teacher = query.first()
-        
-        if not db_teacher:
-            raise ValueError("Teacher doesn't exist!")
-        
-        if db_teacher.subjects:
-            subjects = db_teacher.subjects
+        if current_teacher.subjects:
+            subjects = current_teacher.subjects
         else:
-            raise ValueError(f"{db_teacher.name} has no subjects assigned!")
+            raise ValueError(f"{current_teacher.name} has no subjects assigned!")
         
         if not grade.subject in [subj.subject_name for subj in subjects]:
-            raise ValueError(f"{db_teacher.name} doesn't teach {grade.subject}!")
+            raise ValueError(f"{current_teacher.name} doesn't teach {grade.subject}!")
         
         
         query = db.query(Student).filter(Student.id == grade.student_id).options(selectinload(Student.grades).joinedload(Grade.subject))
@@ -168,32 +138,17 @@ class TeacherRepository:
         return {"status": "Completed", "detail": f"Grade number '{grade.number}' of subject '{grade.subject}' has been deleted from {db_student.name}!"}
 
 
-    def teacher_modify_profile(self, token: str, data: TeacherEdit) -> Teacher:
+    def teacher_modify_profile(self, current_teacher: Teacher, data: TeacherEdit) -> Teacher:
         db = self._db
         
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Teacher":
-            raise ValueError("Unexpected role!")
-        
-        query = db.query(Teacher).filter(Teacher.email == result.get("sub"))
-        db_teacher = query.first()
-        
-        if not db_teacher:
-            raise ValueError("Teacher doesn't exist!")
-        
-        
         if data.name:
-            db_teacher.name = data.name
+            current_teacher.name = data.name
         
         if data.email:
-            db_teacher.email = data.email
+            current_teacher.email = data.email
         
-        db.add(db_teacher)
+        db.add(current_teacher)
         db.commit()
-        db.refresh(db_teacher)
+        db.refresh(current_teacher)
         
-        return db_teacher
+        return current_teacher

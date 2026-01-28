@@ -9,22 +9,8 @@ class AdminRepository:
     def __init__(self, session: Session):
         self._db = session
 
-    def admin_add_subject(self, token: str, subject: SubjectInsert):
+    def admin_add_subject(self, subject: SubjectInsert):
         db = self._db
-        
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Admin":
-            raise ValueError("You don't have the permission to perform this action!")
-                
-        query = db.query(Admin).filter(Admin.email == result.get("sub"))
-        db_admin = query.first()
-        
-        if not db_admin:
-            raise ValueError("Admin doesn't exist!")
         
         db_subject = Subject(subject_name = subject.subject_name, teacher_id = subject.teacher_id)
                 
@@ -39,16 +25,8 @@ class AdminRepository:
         return db_subject
 
 
-    def admin_list_students(self, token: str, skip: int, limit: int) -> list[Student]:
+    def admin_list_students(self, skip: int, limit: int) -> list[Student]:
         db = self._db
-        
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Admin":
-            raise ValueError("You don't have the permission to perform this action!")
                 
         query = db.query(Student).limit(limit).offset(skip)
         
@@ -57,16 +35,8 @@ class AdminRepository:
         return students
 
 
-    def admin_list_teachers(self, token: str, skip: int, limit: int) -> list[Teacher]:
+    def admin_list_teachers(self, skip: int, limit: int) -> list[Teacher]:
         db = self._db
-        
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Admin":
-            raise ValueError("You don't have the permission to perform this action!")
                 
         query = db.query(Teacher).options(selectinload(Teacher.subjects)).limit(limit).offset(skip)
         
@@ -75,16 +45,8 @@ class AdminRepository:
         return teachers
 
 
-    def admin_list_subjects(self, token: str, skip: int, limit: int) -> list[Subject]:
+    def admin_list_subjects(self, skip: int, limit: int) -> list[Subject]:
         db = self._db
-        
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Admin":
-            raise ValueError("You don't have the permission to perform this action!")
                 
         query = db.query(Subject).options(joinedload(Subject.teacher)).limit(limit).offset(skip)
         
@@ -93,16 +55,8 @@ class AdminRepository:
         return subjects
 
 
-    def admin_assign_subject_to_teacher(self, token: str, subject_id: int, teacher_id: int):
+    def admin_assign_subject_to_teacher(self, subject_id: int, teacher_id: int):
         db = self._db
-        
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Admin":
-            raise ValueError("You don't have the permission to perform this action!")
                 
         query = db.query(Subject).filter(Subject.id == subject_id).options(joinedload(Subject.teacher))
         
@@ -128,52 +82,24 @@ class AdminRepository:
         return {"status": "Completed", "detail": f"{subject.subject_name} has been assigned to {teacher.name}!"}
 
 
-    def admin_modify_profile(self, token: str, data: AdminEdit) -> Admin:
+    def admin_modify_profile(self, current_admin: Admin, data: AdminEdit) -> Admin:
         db = self._db
-        
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Admin":
-            raise ValueError("Unexpected role!")
-        
-        query = db.query(Admin).filter(Admin.email == result.get("sub"))
-        db_admin = query.first()
-        
-        if not db_admin:
-            raise ValueError("Admin doesn't exist!")
                 
         if data.username:
-            db_admin.username = data.username
+            current_admin.username = data.username
         
         if data.email:
-            db_admin.email = data.email
+            current_admin.email = data.email
         
-        db.add(db_admin)
+        db.add(current_admin)
         db.commit()
-        db.refresh(db_admin)
+        db.refresh(current_admin)
         
-        return db_admin
+        return current_admin
 
 
-    def admin_approve_user(self, token: str, user_id: int, role: str):
+    def admin_approve_user(self, user_id: int, role: str):
         db = self._db
-        
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Admin":
-            raise ValueError("Unexpected role!")
-        
-        query = db.query(Admin).filter(Admin.email == result.get("sub"))
-        db_admin = query.first()
-        
-        if not db_admin:
-            raise ValueError("Admin doesn't exist!")
         
         match role:
             case "Teacher":
@@ -197,22 +123,8 @@ class AdminRepository:
         return {"status": "Completed", "detail": f"{role} account with id '{user_id}' has been activated!"}
 
 
-    def admin_disapprove_user(self, token: str, user_id: int, role: str):
+    def admin_disapprove_user(self, user_id: int, role: str):
         db = self._db
-        
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Admin":
-            raise ValueError("Unexpected role!")
-        
-        query = db.query(Admin).filter(Admin.email == result.get("sub"))
-        db_admin = query.first()
-        
-        if not db_admin:
-            raise ValueError("Admin doesn't exist!")
         
         match role:
             case "Teacher":

@@ -184,41 +184,30 @@ class AuthRepository:
         return {"status": "Completed", "detail": "Log back in necessary!"}
     
     
-    def delete_user(self, token: str, todelete_id = None, user_type = None):
+    def delete_user(self, current_user: Admin | Student | Teacher, todelete_id = None, user_type = None):
         role = self._role
         
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != role:
-            raise ValueError("Unexpected role!")
-        
-        if role != "Admin" and todelete_id:
+        if not isinstance(current_user, Admin) and todelete_id:
             raise ValueError("Insufficient permissions!")
-        
-        email = result["sub"]
         
         db = self._db
         
-        match role:
-            case "Teacher":
-                query = db.query(Teacher).filter(Teacher.email == email)
-            case "Student":
-                query = db.query(Student).filter(Student.email == email)
-            case "Admin":
-                if not todelete_id:
-                    query = db.query(Admin).filter(Admin.email == email)
-                
-                elif user_type == "Teacher":
-                    query = db.query(Teacher).filter(Teacher.id == todelete_id)
-                
-                elif user_type == "Student":
-                    query = db.query(Student).filter(Student.id == todelete_id)
+        if isinstance(current_user, Teacher):
+            db_user = current_user
         
+        if isinstance(current_user, Student):
+            db_user = current_user
         
-        db_user = query.first()
+        if isinstance(current_user, Admin):
+            if not todelete_id:
+                db_user = current_user
+                
+            elif user_type == "Teacher":
+                db_user = db.query(Teacher).filter(Teacher.id == todelete_id).first()
+                
+            elif user_type == "Student":
+                db_user = db.query(Student).filter(Student.id == todelete_id).first()
+        
         
         if not db_user:
             raise ValueError(f"{user_type if user_type else role} doesn't exist!")

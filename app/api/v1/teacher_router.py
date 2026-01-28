@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse, ConfirmPassword, TeacherBase, TeacherEdit, GradeDelete
+from app.models.models import Teacher
+from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse, ConfirmPassword, TeacherBase, TeacherEdit, GradeDelete, SubjectMinimal
 from app.repositories.teacher_repo import TeacherRepository
 from app.repositories.auth_repo import AuthRepository
-from app.core.dependencies import get_database
+from app.core.dependencies import get_database, teacher_oauth2, get_current_teacher
 from sqlalchemy.orm import Session
-from fastapi.security import OAuth2PasswordBearer
 
 
 router = APIRouter()
 
-teacher_oauth2 = OAuth2PasswordBearer("/teacher/login")
 
 def get_teacher_repo(db: Session = Depends(get_database)):
     return TeacherRepository(db)
@@ -67,50 +66,57 @@ def teacher_verify_token_reset_psswrd(reset_token: str, password: ConfirmPasswor
 
 
 @router.post("/grade/{student_id}", response_model=GradeForTch)
-def teacher_grade_student(grade: GradeInsert, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_grade_student(grade: GradeInsert, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        return repo.teacher_grade_student(token, grade)
+        return repo.teacher_grade_student(current_teacher, grade)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.patch("/grade/{student_id}", response_model=GradeForTch)
-def teacher_edit_grade(grade: GradeInsert, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_edit_grade(grade: GradeInsert, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        return repo.teacher_edit_grade(token, grade)
+        return repo.teacher_edit_grade(current_teacher, grade)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.delete("/grade/{student_id}", response_model=BasicResponse)
-def teacher_delete_grade(grade: GradeDelete, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_delete_grade(grade: GradeDelete, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        return repo.teacher_delete_grade(token, grade)
+        return repo.teacher_delete_grade(current_teacher, grade)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.get("/subjects", response_model=list[SubjectMinimal])
+def admin_list_subjects(current_teacher: Teacher = Depends(get_current_teacher)):
+    try:
+        return current_teacher.subjects
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.get("/me", response_model=TeacherBase)
-def teacher_check_profile(token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def teacher_check_profile(current_teacher: Teacher = Depends(get_current_teacher)):
     try:
-        student = repo.verify_refresh_token(token)
-        return student
+        return current_teacher
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.patch("/me", response_model=TeacherBase)
-def teacher_modify_profile(data: TeacherEdit, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_modify_profile(data: TeacherEdit, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        return repo.teacher_modify_profile(token, data)
+        return repo.teacher_modify_profile(current_teacher, data)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.delete("/me", response_model=BasicResponse)
-def teacher_delete_self(token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def teacher_delete_self(current_teacher: Teacher = Depends(get_current_teacher), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.delete_user(token)
+        return repo.delete_user(current_teacher)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

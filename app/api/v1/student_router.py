@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from app.models.models import Student
 from app.models.schemas import Token, StudentLoggingIn, StudentSigningIn, GradeForStd, BasicResponse, ConfirmPassword, StudentBase, StudentEdit
 from app.repositories.student_repo import StudentRepository
 from app.repositories.auth_repo import AuthRepository
-from app.core.dependencies import get_database
+from app.core.dependencies import get_database, get_current_student, student_oauth2
 from sqlalchemy.orm import Session
-from fastapi.security import OAuth2PasswordBearer
 
 
 router = APIRouter()
 
-student_oauth2 = OAuth2PasswordBearer("/student/login")
 
 def get_student_repo(db: Session = Depends(get_database)):
     return StudentRepository(db)
@@ -67,34 +66,33 @@ def student_verify_token_reset_psswrd(reset_token: str, password: ConfirmPasswor
 
 
 @router.get("/me", response_model=StudentBase)
-def student_check_profile(token: str = Depends(student_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def student_check_profile(current_student: Student = Depends(get_current_student)):
     try:
-        student = repo.verify_refresh_token(token)
-        return student
+        return current_student
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.get("/grades", response_model=list[GradeForStd])
-def student_grades_check(token: str = Depends(student_oauth2), repo: StudentRepository = Depends(get_student_repo)):
+def student_grades_check(current_student: Student = Depends(get_current_student)):
     try:
-        return repo.student_grades_check(token)
+        return current_student.grades
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.patch("/me", response_model=StudentBase)
-def student_modify_profile(data: StudentEdit, token: str = Depends(student_oauth2), repo: StudentRepository = Depends(get_student_repo)):
+def student_modify_profile(data: StudentEdit, current_student: Student = Depends(get_current_student), repo: StudentRepository = Depends(get_student_repo)):
     try:
-        return repo.student_modify_profile(token, data)
+        return repo.student_modify_profile(current_student, data)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.delete("/me", response_model=BasicResponse)
-def student_delete_self(token: str = Depends(student_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
+def student_delete_self(current_student: Student = Depends(get_current_student), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.delete_user(token)
+        return repo.delete_user(current_student)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
