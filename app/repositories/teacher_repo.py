@@ -8,31 +8,16 @@ class TeacherRepository:
     def __init__(self, session: Session):
         self._db = session
 
-    def teacher_grade_student(self, token: str, grade: GradeInsert):
+    def teacher_grade_student(self, current_teacher: Teacher, grade: GradeInsert):
         db = self._db
         
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Teacher":
-            raise ValueError("You don't have the permission to perform this action!")
-        
-        
-        query = db.query(Teacher).filter(Teacher.email == result.get("sub")).options(selectinload(Teacher.subjects))
-        db_teacher = query.first()
-        
-        if not db_teacher:
-            raise ValueError("Teacher doesn't exist!")
-        
-        if db_teacher.subjects:
-            subjects = db_teacher.subjects
+        if current_teacher.subjects:
+            subjects = current_teacher.subjects
         else:
-            raise ValueError(f"{db_teacher.name} has no subjects assigned!")
+            raise ValueError(f"{current_teacher.name} has no subjects assigned!")
         
         if not grade.subject in [subj.subject_name for subj in subjects]:
-            raise ValueError(f"{db_teacher.name} doesn't teach {grade.subject}!")
+            raise ValueError(f"{current_teacher.name} doesn't teach {grade.subject}!")
         
         
         query = db.query(Student).filter(Student.id == grade.student_id).options(selectinload(Student.grades).joinedload(Grade.subject))
