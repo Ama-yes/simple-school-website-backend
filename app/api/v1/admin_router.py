@@ -5,6 +5,7 @@ from app.repositories.admin_repo import AdminRepository
 from app.repositories.auth_repo import AuthRepository
 from app.core.dependencies import get_database, get_current_admin, admin_oauth2
 from sqlalchemy.orm import Session
+from app.core.caching import cache, delete_cache, delete_cache_pattern
 
 
 router = APIRouter()
@@ -66,6 +67,7 @@ def admin_verify_token_reset_psswrd(reset_token: str, password: ConfirmPassword,
 
 
 @router.get("/me", response_model=AdminBase)
+@cache("admin/{current_admin.id}/me", 60)
 def admin_check_profile(current_admin: Admin = Depends(get_current_admin)):
     try:
         return current_admin
@@ -76,12 +78,14 @@ def admin_check_profile(current_admin: Admin = Depends(get_current_admin)):
 @router.post("/add-subject", response_model=SubjectSummary)
 def admin_add_subject(subject: SubjectInsert, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
+        delete_cache_pattern("admin/subjects*")
         return repo.admin_add_subject(subject)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.get("/students", response_model=list[StudentSummary])
+@cache("admin/students_{skip}_{limit}", 60)
 def admin_list_students(skip: int = 0, limit: int = 10, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_list_students(skip, limit)
@@ -90,6 +94,7 @@ def admin_list_students(skip: int = 0, limit: int = 10, require_admin: Admin = D
 
 
 @router.get("/teachers", response_model=list[TeacherBase])
+@cache("admin/teachers_{skip}_{limit}", 60)
 def admin_list_teachers(skip: int = 0, limit: int = 10, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_list_teachers(skip, limit)
@@ -98,6 +103,7 @@ def admin_list_teachers(skip: int = 0, limit: int = 10, require_admin: Admin = D
 
 
 @router.get("/subjects", response_model=list[SubjectSummary])
+@cache("admin/subjects_{skip}_{limit}", 60)
 def admin_list_subjects(skip: int = 0, limit: int = 10, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
         return repo.admin_list_subjects(skip, limit)
@@ -108,6 +114,8 @@ def admin_list_subjects(skip: int = 0, limit: int = 10, require_admin: Admin = D
 @router.post("/assign-subject", response_model=BasicResponse)
 def admin_assign_subject_to_teacher(subject_id: int, teacher_id: int, require_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
+        delete_cache_pattern("admin/teachers*")
+        delete_cache_pattern("admin/subjects*")
         return repo.admin_assign_subject_to_teacher(subject_id, teacher_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
@@ -116,6 +124,7 @@ def admin_assign_subject_to_teacher(subject_id: int, teacher_id: int, require_ad
 @router.patch("/me", response_model=AdminBase)
 def admin_modify_profile(data: AdminEdit, current_admin: Admin = Depends(get_current_admin), repo: AdminRepository = Depends(get_admin_repo)):
     try:
+        delete_cache(f"admin/{current_admin.id}/me")
         return repo.admin_modify_profile(current_admin, data)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
@@ -156,6 +165,7 @@ def admin_disapprove_teacher(teacher_id: int, require_admin: Admin = Depends(get
 @router.delete("/me", response_model=BasicResponse)
 def admin_delete_self(current_admin: Admin = Depends(get_current_admin), repo: AuthRepository = Depends(get_auth_repo)):
     try:
+        delete_cache(f"admin/{current_admin.id}/me")
         return repo.delete_user(current_admin)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
@@ -164,6 +174,7 @@ def admin_delete_self(current_admin: Admin = Depends(get_current_admin), repo: A
 @router.delete("/student/{student_id}", response_model=BasicResponse)
 def admin_delete_student(student_id: int, current_admin: Admin = Depends(get_current_admin), repo: AuthRepository = Depends(get_auth_repo)):
     try:
+        delete_cache_pattern("admin/students*")
         return repo.delete_user(current_admin, student_id, "Student")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
@@ -172,6 +183,7 @@ def admin_delete_student(student_id: int, current_admin: Admin = Depends(get_cur
 @router.delete("/teacher/{teacher_id}", response_model=BasicResponse)
 def admin_delete_teacher(teacher_id: int, current_admin: Admin = Depends(get_current_admin), repo: AuthRepository = Depends(get_auth_repo)):
     try:
+        delete_cache_pattern("admin/teachers*")
         return repo.delete_user(current_admin, teacher_id, "Teacher")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))

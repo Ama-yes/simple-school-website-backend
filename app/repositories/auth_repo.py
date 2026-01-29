@@ -6,7 +6,7 @@ from app.models.models import Admin, Teacher, Student
 from app.core.config import settings
 from app.worker.tasks import send_email
 from datetime import datetime, timedelta
-import uuid
+from secrets import token_urlsafe
 
 
 
@@ -118,12 +118,19 @@ class AuthRepository:
     
     def token_refresh(self, token: str):
         role = self._role
+        db = self._db
         
         db_user = self.verify_refresh_token(token)
         
         access_token = create_access_token({"sub": db_user.email, "role": role})
         
-        return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
+        db_user.token_version += 1
+        db.add(db_user)
+        db.commit()
+        
+        refresh_token = create_refresh_token({"sub": db_user.email, "version": db_user.token_version, "role": role})
+        
+        return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
     
     
     def reset_password(self, email: str):
@@ -143,7 +150,7 @@ class AuthRepository:
         if not db_user:
             raise ValueError(f"{email} is not linked to any account!")
         
-        reset_token = str(uuid.uuid4())
+        reset_token = token_urlsafe(32)
         
         db_user.reset_token = reset_token
         db_user.reset_token_expire = datetime.now() + timedelta(minutes=15)

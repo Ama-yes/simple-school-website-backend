@@ -5,6 +5,7 @@ from app.repositories.student_repo import StudentRepository
 from app.repositories.auth_repo import AuthRepository
 from app.core.dependencies import get_database, get_current_student, student_oauth2
 from sqlalchemy.orm import Session
+from app.core.caching import cache, delete_cache, delete_cache_pattern
 
 
 router = APIRouter()
@@ -66,6 +67,7 @@ def student_verify_token_reset_psswrd(reset_token: str, password: ConfirmPasswor
 
 
 @router.get("/me", response_model=StudentBase)
+@cache("student/{current_student.id}/me", 60)
 def student_check_profile(current_student: Student = Depends(get_current_student)):
     try:
         return current_student
@@ -74,6 +76,7 @@ def student_check_profile(current_student: Student = Depends(get_current_student
 
 
 @router.get("/grades", response_model=list[GradeForStd])
+@cache("student/{current_student.id}/grades", 60)
 def student_grades_check(current_student: Student = Depends(get_current_student), repo: StudentRepository = Depends(get_student_repo)):
     try:
         return repo.student_grades_check(current_student)
@@ -84,6 +87,8 @@ def student_grades_check(current_student: Student = Depends(get_current_student)
 @router.patch("/me", response_model=StudentBase)
 def student_modify_profile(data: StudentEdit, current_student: Student = Depends(get_current_student), repo: StudentRepository = Depends(get_student_repo)):
     try:
+        delete_cache("teacher/{current_student.id}/me")
+        delete_cache_pattern("admin/students*")
         return repo.student_modify_profile(current_student, data)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
@@ -92,6 +97,8 @@ def student_modify_profile(data: StudentEdit, current_student: Student = Depends
 @router.delete("/me", response_model=BasicResponse)
 def student_delete_self(current_student: Student = Depends(get_current_student), repo: AuthRepository = Depends(get_auth_repo)):
     try:
+        delete_cache("teacher/{current_student.id}/me")
+        delete_cache_pattern("admin/students*")
         return repo.delete_user(current_student)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))

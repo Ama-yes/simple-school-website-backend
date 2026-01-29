@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy import Boolean, Column, Integer, String, Float, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 
@@ -9,11 +9,11 @@ class Student(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    hashed_password = Column(String, index=True)
+    hashed_password = Column(String)
     school_year = Column(Integer, index=True)
-    token_version = Column(Integer, index=True)
+    token_version = Column(Integer)
     grades = relationship("Grade", back_populates="student")
-    reset_token = Column(String, nullable=True)
+    reset_token = Column(String, unique=True, nullable=True)
     reset_token_expire = Column(DateTime, nullable=True)
     approved = Column(Boolean, default=False)
 
@@ -23,10 +23,10 @@ class Teacher(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    hashed_password = Column(String, index=True)
-    token_version = Column(Integer, index=True)
+    hashed_password = Column(String)
+    token_version = Column(Integer)
     subjects = relationship("Subject", back_populates="teacher")
-    reset_token = Column(String, nullable=True)
+    reset_token = Column(String, unique=True, nullable=True)
     reset_token_expire = Column(DateTime, nullable=True)
     approved = Column(Boolean, default=False)
 
@@ -49,6 +49,8 @@ class Grade(Base):
     student_id = Column(Integer, ForeignKey("student.id", ondelete="CASCADE"))
     subject = relationship("Subject", back_populates="grades")
     student = relationship("Student", back_populates="grades")
+    
+    __table_args__ = (UniqueConstraint("subject_id", "student_id", "number", name="unique_grade_per_subject"))
 
 
 class Admin(Base):
@@ -56,7 +58,7 @@ class Admin(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    hashed_password = Column(String, index=True)
-    token_version = Column(Integer, index=True)
-    reset_token = Column(String, nullable=True)
+    hashed_password = Column(String)
+    token_version = Column(Integer)
+    reset_token = Column(String, unique=True, nullable=True)
     reset_token_expire = Column(DateTime, nullable=True)

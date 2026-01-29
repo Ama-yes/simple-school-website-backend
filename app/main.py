@@ -26,7 +26,10 @@ logger = setup_logger()
 @app.exception_handler(Exception)
 async def handle_except(request: Request, exception: Exception):
     logger.error(f"Error processing {request.method} {request.url}", exc_info=exception)
-    return JSONResponse(status_code=500, content={"detail": "Unexpected error occured!"})
+    if isinstance(exception, ValueError):
+        return JSONResponse(status_code=400, content={"detail": str(exception)})
+    else:
+        return JSONResponse(status_code=500, content={"detail": "Unexpected error occurred!"})
 
 
 if __name__ == "__main__":

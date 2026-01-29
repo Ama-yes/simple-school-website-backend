@@ -12,7 +12,7 @@ context = CryptContext(schemes=["bcrypt"])
 ACCESS_ENCODING_KEY = settings.access_encoder_key
 REFRESH_ENCODING_KEY = settings.refresh_encoder_key
 ALGORITHM = "HS256"
-ACCES_TOKEN_EXPIRE_MINUTES = 15
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 
@@ -28,7 +28,7 @@ def check_password(plain_password: str, hashed_password: str):
 def create_access_token(data: dict):
     to_encode = data.copy()
     
-    expire = datetime.now() + timedelta(minutes=ACCES_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     
     encoded = jwt.encode(to_encode, key=ACCESS_ENCODING_KEY, algorithm=ALGORITHM)
