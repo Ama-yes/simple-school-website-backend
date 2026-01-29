@@ -5,28 +5,28 @@ from functools import wraps
 from app.core.config import settings
 
 
-redis_client = Redis.from_url(settings.redis_caching_url, decode_responses=True)
+async_redis_client = Redis.from_url(settings.redis_caching_url, decode_responses=True)
 
 
 async def get_cache(key: str):
-    data = await redis_client.get(key)
+    data = await async_redis_client.get(key)
     
     return json.loads(data) if data else None
 
 
 async def set_cache(key: str, data: dict, expire: int = 60):
-    await redis_client.set(key, json.dumps(data), ex=expire)
+    await async_redis_client.set(key, json.dumps(data), ex=expire)
 
 
 async def delete_cache(key: str):
-    await redis_client.delete(key)
+    await async_redis_client.delete(key)
 
 
 async def delete_cache_pattern(pattern: str):
-    keys = redis_client.scan_iter(match=pattern)
+    keys = async_redis_client.scan_iter(match=pattern)
     
     async for key in keys:
-        await redis_client.delete(key)
+        await async_redis_client.delete(key)
 
 
 def cache(key: str, ttl: int = 30):
