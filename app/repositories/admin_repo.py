@@ -1,134 +1,148 @@
-from app.models.schemas import SubjectInsert, AdminSigningIn
-from app.models.models import Admin, Subject
-from app.core.config import settings
+from app.models.schemas import SubjectInsert, AdminEdit
+from app.models.models import Admin, Subject, Student, Teacher
 from app.core.security import check_refresh_token, check_access_token, create_access_token, create_refresh_token, password_hashing
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
-from app.worker.tasks import send_email
-from datetime import datetime, timedelta
-import uuid
 
 
 class AdminRepository:
     def __init__(self, session: Session):
         self._db = session
-    
-    def admin_verify_refresh_token(self, token) -> Admin:
-        result = check_refresh_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if not result.get("version"):
-            raise ValueError("Invalid token type!")
-        
-        if result.get("role") != "Admin":
-            raise ValueError("Unexpected role!")
-        
-        username = result["sub"]
-        token_v = result["version"]
+
+    def admin_add_subject(self, subject: SubjectInsert):
         db = self._db
-        query = db.query(Admin).filter(Admin.username == username)
-        
-        db_admin = query.first()
-        
-        if not db_admin:
-            raise ValueError("Invalid credentials!")
-        
-        if db_admin.token_version != token_v:
-            raise ValueError("Invalid token version!")
-        
-        return db_admin
-    
-    
-    def admin_change_password(self, new_password: str, token: str):
-        db = self._db
-        db_admin = self.admin_verify_refresh_token(token)
-        
-        db_admin.token_version += 1
-        db_admin.hashed_password = password_hashing(password=new_password) 
-        db.add(db_admin)
-        db.commit()
-        
-        return {"status": "Completed", "detail": "Log back in necessary!"}
-    
-    
-    def admin_token_refresh(self, token: str):
-        db_admin = self.admin_verify_refresh_token(token)
-        
-        access_token = create_access_token({"sub": db_admin.username, "role": "Admin"})
-        
-        return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
-    
-    
-    def admin_reset_password(self, email: str):
-        db = self._db
-        
-        query = db.query(Admin).filter(Admin.email == email)
-        db_admin = query.first()
-        
-        if not db_admin:
-            raise ValueError(f"{email} is not linked to any account!")
-        
-        reset_token = str(uuid.uuid4())
-        
-        db_admin.reset_token = reset_token
-        db_admin.reset_token_expire = datetime.now() + timedelta(minutes=15)
-        
-        db.commit()
-        
-        link = f"{settings.hostname}/admin/password-resetting/{reset_token}"
-        
-        send_email.apply_async(args=(email, f"Hey {db_admin.username},\nClick below to reset your password:\n{link}\nNOTE: THIS ISN'T A CLICKABLE LINK, YOU SHOULD SEND A 'POST' REQUEST TO IT INCLUDING THE NEW PASSWORD!", "Password Reset Request"), expires=30, countdown=5)
-        return "Email sent in the backgroud!"
-    
-    
-    def admin_verify_reset_token(self, token: str, password: str):
-        db = self._db
-        
-        query = db.query(Admin).filter(Admin.reset_token == token)
-        db_admin = query.first()
-        
-        if not db_admin or db_admin.reset_token_expire < datetime.now():
-            raise ValueError("Invalid link!")
-        
-        
-        db_admin.token_version += 1
-        db_admin.hashed_password = password_hashing(password) 
-        db_admin.reset_token = None
-        db_admin.reset_token_expire = None
-        db.add(db_admin)
-        db.commit()
-        
-        return {"status": "Completed", "detail": "Log back in necessary!"}
-    
-    
-    def admin_add_subject(self, token: str, subject: SubjectInsert):
-        db = self._db
-        
-        result = check_access_token(token)
-        
-        if not result:
-            raise ValueError("Invalid credentials!")
-        
-        if result.get("role") != "Admin":
-            raise ValueError("You don't have the permission to perform this action!")
-        
-        
-        query = db.query(Admin).filter(Admin.email == result.get("sub"))
-        db_admin = query.first()
-        
-        if not db_admin:
-            raise ValueError("Admin doesn't exist!")
         
         db_subject = Subject(subject_name = subject.subject_name, teacher_id = subject.teacher_id)
                 
         try:
             db.add(db_subject)
             db.commit()
-        
-            db.refresh(db_subject)
-            return db_subject
         except IntegrityError:
             db.rollback()
             raise ValueError(f"Subject with name '{subject.subject_name}' already exists!")
+        
+        db.refresh(db_subject)
+        return db_subject
+
+
+    def admin_list_students(self, skip: int, limit: int) -> list[Student]:
+        db = self._db
+                
+        query = db.query(Student).limit(limit).offset(skip)
+        
+        students = query.all()
+        
+        return students
+
+
+    def admin_list_teachers(self, skip: int, limit: int) -> list[Teacher]:
+        db = self._db
+                
+        query = db.query(Teacher).options(selectinload(Teacher.subjects)).limit(limit).offset(skip)
+        
+        teachers = query.all()
+        
+        return teachers
+
+
+    def admin_list_subjects(self, skip: int, limit: int) -> list[Subject]:
+        db = self._db
+                
+        query = db.query(Subject).options(joinedload(Subject.teacher)).limit(limit).offset(skip)
+        
+        subjects = query.all()
+        
+        return subjects
+
+
+    def admin_assign_subject_to_teacher(self, subject_id: int, teacher_id: int):
+        db = self._db
+                
+        query = db.query(Subject).filter(Subject.id == subject_id).options(joinedload(Subject.teacher))
+        
+        subject = query.first()
+        
+        if not subject:
+            raise ValueError(f"No subject with id '{subject_id}' found!")
+        
+        if subject.teacher:
+            raise ValueError(f"Subject with id '{subject_id}' is already assigned to {subject.teacher.name} with id '{subject.teacher_id}'!")
+                
+        query = db.query(Teacher).filter(Teacher.id == teacher_id)
+        
+        teacher = query.first()
+        
+        if not teacher:
+            raise ValueError(f"No teacher with id '{teacher_id}' found!")
+        
+        subject.teacher_id = teacher_id
+        db.add(subject)
+        db.commit()
+        
+        return {"status": "Completed", "detail": f"{subject.subject_name} has been assigned to {teacher.name}!"}
+
+
+    def admin_modify_profile(self, current_admin: Admin, data: AdminEdit) -> Admin:
+        db = self._db
+                
+        if data.username:
+            current_admin.username = data.username
+        
+        if data.email:
+            current_admin.email = data.email
+        
+        db.add(current_admin)
+        db.commit()
+        db.refresh(current_admin)
+        
+        return current_admin
+
+
+    def admin_approve_user(self, user_id: int, role: str):
+        db = self._db
+        
+        match role:
+            case "Teacher":
+                query = db.query(Teacher).filter(Teacher.id == user_id)
+            case "Student":
+                query = db.query(Student).filter(Student.id == user_id)
+        
+        db_user = query.first()
+        
+        if not db_user:
+            raise ValueError(f"{role} account with id '{user_id}' doesn't exist!")
+                
+        if db_user.approved:
+            raise ValueError(f"{role} account with id '{user_id}' was already activated!")
+        
+        db_user.approved = True
+        
+        db.add(db_user)
+        db.commit()
+        
+        return {"status": "Completed", "detail": f"{role} account with id '{user_id}' has been activated!"}
+
+
+    def admin_disapprove_user(self, user_id: int, role: str):
+        db = self._db
+        
+        match role:
+            case "Teacher":
+                query = db.query(Teacher).filter(Teacher.id == user_id)
+            case "Student":
+                query = db.query(Student).filter(Student.id == user_id)
+        
+        db_user = query.first()
+        
+        if not db_user:
+            raise ValueError(f"{role} account with id '{user_id}' doesn't exist!")
+                
+        if not db_user.approved:
+            raise ValueError(f"{role} account with id '{user_id}' was already disactivated or has not been activated yet!")
+        
+        db_user.approved = False
+        
+        db.add(db_user)
+        db.commit()
+        
+        return {"status": "Completed", "detail": f"{role} account with id '{user_id}' has been disactivated!"}

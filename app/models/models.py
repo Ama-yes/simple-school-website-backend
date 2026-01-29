@@ -15,6 +15,8 @@ class Student(Base):
     grades = relationship("Grade", back_populates="student")
     reset_token = Column(String, nullable=True)
     reset_token_expire = Column(DateTime, nullable=True)
+    approved = Column(Boolean, default=False)
+
 
 class Teacher(Base):
     __tablename__ = "teacher"
@@ -26,6 +28,7 @@ class Teacher(Base):
     subjects = relationship("Subject", back_populates="teacher")
     reset_token = Column(String, nullable=True)
     reset_token_expire = Column(DateTime, nullable=True)
+    approved = Column(Boolean, default=False)
 
 
 class Subject(Base):

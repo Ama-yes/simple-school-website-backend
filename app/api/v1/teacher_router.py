@@ -1,16 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert
 from app.models.models import Teacher
+from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse, ConfirmPassword, TeacherBase, TeacherEdit, GradeDelete, SubjectMinimal
 from app.repositories.teacher_repo import TeacherRepository
 from app.repositories.auth_repo import AuthRepository
-from app.core.dependencies import get_database
+from app.core.dependencies import get_database, teacher_oauth2, get_current_teacher
 from sqlalchemy.orm import Session
-from fastapi.security import OAuth2PasswordBearer
 
 
 router = APIRouter()
 
-teacher_oauth2 = OAuth2PasswordBearer("/teacher/login")
 
 def get_teacher_repo(db: Session = Depends(get_database)):
     return TeacherRepository(db)
@@ -19,7 +17,7 @@ def get_auth_repo(db: Session = Depends(get_database)):
     return AuthRepository(db, "Teacher")
 
 
-@router.post("/signin")
+@router.post("/signin", response_model=BasicResponse)
 def teacher_signin(data: TeacherSigningIn, repo: AuthRepository = Depends(get_auth_repo)):
     try:
         return repo.signin(data)
@@ -35,42 +33,90 @@ def teacher_login(user: TeacherLoggingIn, repo: AuthRepository = Depends(get_aut
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/change-password", response_model=dict)
-def teacher_change_password(new_password: str, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+@router.post("/change-password", response_model=BasicResponse)
+def teacher_change_password(new_password: ConfirmPassword, token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.teacher_change_password(new_password, token)
+        return repo.change_password(new_password, token)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/refresh", response_model=Token)
-def teacher_token_refresh(token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_token_refresh(token: str = Depends(teacher_oauth2), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.teacher_token_refresh(token)
+        return repo.token_refresh(token)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/resetpassword", response_model=str)
-def teacher_reset_password(email: str, repo: TeacherRepository = Depends(get_teacher_repo)):
+@router.post("/resetpassword", response_model=BasicResponse)
+def teacher_reset_password(email: str, repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.teacher_reset_password(email)
+        return repo.reset_password(email)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/password-resetting/{token}", response_model=dict)
-def teacher_verify_reset_token(token: str, password: str, repo: TeacherRepository = Depends(get_teacher_repo)):
+@router.post("/password-resetting/{reset_token}", response_model=BasicResponse)
+def teacher_verify_token_reset_psswrd(reset_token: str, password: ConfirmPassword, repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        return repo.teacher_verify_reset_token(token, password)
+        return repo.verify_token_reset_psswrd(reset_token, password)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @router.post("/grade/{student_id}", response_model=GradeForTch)
-def teacher_grade_student(student_id: int, subject: str, grade: GradeInsert, token: str = Depends(teacher_oauth2), repo: TeacherRepository = Depends(get_teacher_repo)):
+def teacher_grade_student(grade: GradeInsert, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        return repo.teacher_grade_student(token, student_id, subject.upper(), grade)
+        return repo.teacher_grade_student(current_teacher, grade)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.patch("/grade/{student_id}", response_model=GradeForTch)
+def teacher_edit_grade(grade: GradeInsert, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
+    try:
+        return repo.teacher_edit_grade(current_teacher, grade)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.delete("/grade/{student_id}", response_model=BasicResponse)
+def teacher_delete_grade(grade: GradeDelete, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
+    try:
+        return repo.teacher_delete_grade(current_teacher, grade)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.get("/subjects", response_model=list[SubjectMinimal])
+def teacher_list_subjects(current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
+    try:
+        return repo.teacher_list_subjects(current_teacher)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.get("/me", response_model=TeacherBase)
+def teacher_check_profile(current_teacher: Teacher = Depends(get_current_teacher)):
+    try:
+        return current_teacher
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.patch("/me", response_model=TeacherBase)
+def teacher_modify_profile(data: TeacherEdit, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
+    try:
+        return repo.teacher_modify_profile(current_teacher, data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.delete("/me", response_model=BasicResponse)
+def teacher_delete_self(current_teacher: Teacher = Depends(get_current_teacher), repo: AuthRepository = Depends(get_auth_repo)):
+    try:
+        return repo.delete_user(current_teacher)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
