@@ -50,7 +50,7 @@ class Grade(Base):
     subject = relationship("Subject", back_populates="grades")
     student = relationship("Student", back_populates="grades")
     
-    __table_args__ = (UniqueConstraint("subject_id", "student_id", "number", name="unique_grade_per_subject"))
+    __table_args__ = (UniqueConstraint("subject_id", "student_id", "number", name="unique_grade_per_subject"),)
 
 
 class Admin(Base):

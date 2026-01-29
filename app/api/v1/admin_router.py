@@ -174,6 +174,7 @@ def admin_delete_self(current_admin: Admin = Depends(get_current_admin), repo: A
 @router.delete("/student/{student_id}", response_model=BasicResponse)
 def admin_delete_student(student_id: int, current_admin: Admin = Depends(get_current_admin), repo: AuthRepository = Depends(get_auth_repo)):
     try:
+        delete_cache(f"student/{student_id}/me")
         delete_cache_pattern("admin/students*")
         return repo.delete_user(current_admin, student_id, "Student")
     except ValueError as e:
@@ -183,6 +184,7 @@ def admin_delete_student(student_id: int, current_admin: Admin = Depends(get_cur
 @router.delete("/teacher/{teacher_id}", response_model=BasicResponse)
 def admin_delete_teacher(teacher_id: int, current_admin: Admin = Depends(get_current_admin), repo: AuthRepository = Depends(get_auth_repo)):
     try:
+        delete_cache(f"teacher/{teacher_id}/me")
         delete_cache_pattern("admin/teachers*")
         return repo.delete_user(current_admin, teacher_id, "Teacher")
     except ValueError as e:

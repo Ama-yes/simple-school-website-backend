@@ -69,7 +69,7 @@ def teacher_verify_token_reset_psswrd(reset_token: str, password: ConfirmPasswor
 @router.post("/grade/{student_id}", response_model=GradeForTch)
 def teacher_grade_student(grade: GradeInsert, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        delete_cache_pattern("student/{student_id}/grades")
+        delete_cache_pattern(f"student/{grade.student_id}/grades")
         delete_cache_pattern("admin/students*")
         return repo.teacher_grade_student(current_teacher, grade)
     except ValueError as e:
@@ -79,7 +79,7 @@ def teacher_grade_student(grade: GradeInsert, current_teacher: Teacher = Depends
 @router.patch("/grade/{student_id}", response_model=GradeForTch)
 def teacher_edit_grade(grade: GradeInsert, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        delete_cache("student/{student_id}/grades")
+        delete_cache(f"student/{grade.student_id}/grades")
         delete_cache_pattern("admin/students*")
         return repo.teacher_edit_grade(current_teacher, grade)
     except ValueError as e:
@@ -89,7 +89,7 @@ def teacher_edit_grade(grade: GradeInsert, current_teacher: Teacher = Depends(ge
 @router.delete("/grade/{student_id}", response_model=BasicResponse)
 def teacher_delete_grade(grade: GradeDelete, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        delete_cache("student/{student_id}/grades")
+        delete_cache(f"student/{grade.student_id}/grades")
         delete_cache_pattern("admin/students*")
         return repo.teacher_delete_grade(current_teacher, grade)
     except ValueError as e:
@@ -117,7 +117,7 @@ def teacher_check_profile(current_teacher: Teacher = Depends(get_current_teacher
 @router.patch("/me", response_model=TeacherBase)
 def teacher_modify_profile(data: TeacherEdit, current_teacher: Teacher = Depends(get_current_teacher), repo: TeacherRepository = Depends(get_teacher_repo)):
     try:
-        delete_cache("teacher/{current_teacher.id}/me")
+        delete_cache(f"teacher/{current_teacher.id}/me")
         delete_cache_pattern("admin/teachers*")
         return repo.teacher_modify_profile(current_teacher, data)
     except ValueError as e:
@@ -127,7 +127,7 @@ def teacher_modify_profile(data: TeacherEdit, current_teacher: Teacher = Depends
 @router.delete("/me", response_model=BasicResponse)
 def teacher_delete_self(current_teacher: Teacher = Depends(get_current_teacher), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        delete_cache("teacher/{current_teacher.id}/me")
+        delete_cache(f"teacher/{current_teacher.id}/me")
         delete_cache_pattern("admin/teachers*")
         return repo.delete_user(current_teacher)
     except ValueError as e:

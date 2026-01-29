@@ -87,7 +87,7 @@ def student_grades_check(current_student: Student = Depends(get_current_student)
 @router.patch("/me", response_model=StudentBase)
 def student_modify_profile(data: StudentEdit, current_student: Student = Depends(get_current_student), repo: StudentRepository = Depends(get_student_repo)):
     try:
-        delete_cache("teacher/{current_student.id}/me")
+        delete_cache(f"student/{current_student.id}/me")
         delete_cache_pattern("admin/students*")
         return repo.student_modify_profile(current_student, data)
     except ValueError as e:
@@ -97,7 +97,7 @@ def student_modify_profile(data: StudentEdit, current_student: Student = Depends
 @router.delete("/me", response_model=BasicResponse)
 def student_delete_self(current_student: Student = Depends(get_current_student), repo: AuthRepository = Depends(get_auth_repo)):
     try:
-        delete_cache("teacher/{current_student.id}/me")
+        delete_cache(f"student/{current_student.id}/me")
         delete_cache_pattern("admin/students*")
         return repo.delete_user(current_student)
     except ValueError as e:

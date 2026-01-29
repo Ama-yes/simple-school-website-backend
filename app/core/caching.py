@@ -1,9 +1,10 @@
 import json, redis, inspect
+from fastapi.encoders import jsonable_encoder
 from functools import wraps
 from app.core.config import settings
 
 
-redis_client = redis.from_url(settings.redis_caching_url, decode_response=True)
+redis_client = redis.from_url(settings.redis_caching_url, decode_responses=True)
 
 
 def get_cache(key: str):
@@ -51,7 +52,7 @@ def cache(key: str, ttl: int = 30):
             else:
                 print(f"Loading {final_key} from the database...")
                 result = function(*args, **kwargs)
-                set_cache(final_key, result, ttl)
+                set_cache(final_key, jsonable_encoder(result), ttl)
                 return result
             
         return wrapper
