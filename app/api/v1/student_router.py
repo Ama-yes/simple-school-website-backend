@@ -19,7 +19,7 @@ def get_auth_repo(db: AsyncSession = Depends(get_database)):
     return AuthRepository(db, "Student")
 
 
-@router.post("/signin", response_model=BasicResponse)
+@router.post("/signin", response_model=BasicResponse, dependencies=[Depends(RateLimiter(times=5, seconds=60))])
 async def student_signin(data: StudentSigningIn, repo: AuthRepository = Depends(get_auth_repo)):
     try:
         return await repo.signin(data)
