@@ -3,7 +3,7 @@ from app.models.models import Admin
 from app.models.schemas import Token, AdminLoggingIn, AdminSigningIn, SubjectSummary, SubjectInsert, BasicResponse, ConfirmPassword, AdminBase, StudentSummary, TeacherBase, AdminEdit
 from app.repositories.admin_repo import AdminRepository
 from app.repositories.auth_repo import AuthRepository
-from app.core.dependencies import get_database, get_current_admin, admin_oauth2
+from app.core.dependencies import get_database, get_current_admin, admin_oauth2, username_identifier
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.caching import cache, delete_cache, delete_cache_pattern
 from fastapi_limiter.depends import RateLimiter
@@ -19,7 +19,7 @@ def get_auth_repo(db: AsyncSession = Depends(get_database)):
     return AuthRepository(db, "Admin")
 
 
-@router.post("/signin", response_model=BasicResponse, dependencies=[Depends(RateLimiter(times=5, seconds=60))])
+@router.post("/signin", response_model=BasicResponse, dependencies=[Depends(RateLimiter(times=10, seconds=60)), Depends(RateLimiter(times=5, seconds=60, identifier=username_identifier))])
 async def admin_signin(data: AdminSigningIn, repo: AuthRepository = Depends(get_auth_repo)):
     try:
         return await repo.signin(data)
@@ -27,7 +27,7 @@ async def admin_signin(data: AdminSigningIn, repo: AuthRepository = Depends(get_
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/login", response_model=Token, dependencies=[Depends(RateLimiter(times=5, seconds=60))])
+@router.post("/login", response_model=Token, dependencies=[Depends(RateLimiter(times=10, seconds=60)), Depends(RateLimiter(times=5, seconds=60, identifier=username_identifier))])
 async def admin_login(user: AdminLoggingIn, repo: AuthRepository = Depends(get_auth_repo)):
     try:
         return await repo.login(user)

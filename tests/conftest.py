@@ -6,6 +6,7 @@ from sqlalchemy.pool import StaticPool
 from httpx import AsyncClient, ASGITransport
 import pytest
 from asgi_lifespan import LifespanManager
+from app.core.caching import delete_cache_pattern
 
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -33,8 +34,15 @@ async def client(db_session):
     
     app.dependency_overrides[get_database] = override_get_database
     
-    async with LifespanManager(app=app) as manager:
+    async with LifespanManager(app=app):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as async_client:
             yield async_client
     
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+async def clear_redis_limiter():
+    await delete_cache_pattern("fastapi-limiter:*")
+    
+    yield

@@ -3,7 +3,7 @@ from app.models.models import Teacher
 from app.models.schemas import Token, TeacherLoggingIn, TeacherSigningIn, GradeForTch, GradeInsert, BasicResponse, ConfirmPassword, TeacherBase, TeacherEdit, GradeDelete, SubjectMinimal
 from app.repositories.teacher_repo import TeacherRepository
 from app.repositories.auth_repo import AuthRepository
-from app.core.dependencies import get_database, teacher_oauth2, get_current_teacher
+from app.core.dependencies import get_database, teacher_oauth2, get_current_teacher, username_identifier
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.caching import cache, delete_cache_pattern, delete_cache
 from fastapi_limiter.depends import RateLimiter
@@ -19,7 +19,7 @@ def get_auth_repo(db: AsyncSession = Depends(get_database)):
     return AuthRepository(db, "Teacher")
 
 
-@router.post("/signin", response_model=BasicResponse, dependencies=[Depends(RateLimiter(times=5, seconds=60))])
+@router.post("/signin", response_model=BasicResponse, dependencies=[Depends(RateLimiter(times=10, seconds=60)), Depends(RateLimiter(times=5, seconds=60, identifier=username_identifier))])
 async def teacher_signin(data: TeacherSigningIn, repo: AuthRepository = Depends(get_auth_repo)):
     try:
         return await repo.signin(data)
@@ -27,7 +27,7 @@ async def teacher_signin(data: TeacherSigningIn, repo: AuthRepository = Depends(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/login", response_model=Token, dependencies=[Depends(RateLimiter(times=5, seconds=60))])
+@router.post("/login", response_model=Token, dependencies=[Depends(RateLimiter(times=10, seconds=60)), Depends(RateLimiter(times=5, seconds=60, identifier=username_identifier))])
 async def teacher_login(user: TeacherLoggingIn, repo: AuthRepository = Depends(get_auth_repo)):
     try:
         return await repo.login(user)

@@ -40,7 +40,7 @@ async def test_admin_login_wrong_psswrd(client, db_session):
     assert response.json()["detail"] == "Email or password incorrect!"
 
 
-"""async def test_login_rate_limit(client):
+async def test_login_rate_limit(client):
     payload = {"username": "RateLimitTest", "password": "Testpassword123"}
     
     for _ in range(5):
@@ -49,4 +49,4 @@ async def test_admin_login_wrong_psswrd(client, db_session):
     
     response = await client.post("/admin/login", json=payload)
     
-    assert response.status_code in [429, 400]"""
+    assert response.status_code in [429, 400]

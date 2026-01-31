@@ -1,5 +1,5 @@
 from app.db.database import localSession
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from app.core.security import check_access_token
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -85,3 +85,10 @@ async def get_current_admin(token: str = Depends(admin_oauth2), db: AsyncSession
         raise ValueError("Invalid credentials!")
     
     return db_admin
+
+
+async def username_identifier(request: Request):
+    body = await request.json()
+    
+    identifier = body.get("username") or body.get("email", "anonymous")
+    return str(identifier).lower().strip()

@@ -15,7 +15,7 @@ async def test_concurrent_logins(client, db_session):
     payload = {"username": "test-admin", "password": admin_password}
     
     tasks = []
-    for _ in range(3):
+    for _ in range(5):
         tasks.append(client.post(url="/admin/login", json=payload))
     
     start = time.perf_counter()
