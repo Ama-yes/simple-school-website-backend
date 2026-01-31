@@ -4,22 +4,17 @@ from fastapi_limiter import FastAPILimiter
 import uvicorn
 from app.api.v1 import student_router, admin_router, teacher_router
 from app.core.logging import setup_logger
-from app.db.database import engine
-from app.models.models import Base
 from app.core.caching import async_redis_client
 from contextlib import asynccontextmanager
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
-    
     await FastAPILimiter.init(async_redis_client)
     
     yield
     
-    await async_redis_client.close()
+    await async_redis_client.aclose()
 
 
 app = FastAPI(lifespan=lifespan)

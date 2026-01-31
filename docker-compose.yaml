@@ -5,10 +5,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_started
+      init_db:
+        condition: service_completed_successfully
     environment:
       - ACCESS_ENCODER_KEY=${ACCESS_ENCODER_KEY}
       - REFRESH_ENCODER_KEY=${REFRESH_ENCODER_KEY}
@@ -22,7 +22,7 @@ services:
       - SMTP_PASSWORD=
     volumes:
       - .:/app
-  
+
   postgres:
     image: postgres:alpine
     container_name: school_app_db
@@ -76,6 +76,25 @@ services:
       - "1025:1025"
     networks:
       - default
+
+  init_db:
+    build: .
+    container_name: school_app_database_initialization
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ACCESS_ENCODER_KEY=${ACCESS_ENCODER_KEY}
+      - REFRESH_ENCODER_KEY=${REFRESH_ENCODER_KEY}
+      - DATABASE_URL=postgresql+asyncpg://school_user:school_password@postgres:5432/school_db
+      - REDIS_CACHING_URL=redis://redis:6379/0
+      - REDIS_WORKER_URL=redis://redis:6379/1
+      - HOSTNAME=http://localhost:8000
+      - SMTP_SERVER=mailpit
+      - SMTP_PORT=1025
+      - SMTP_USER=
+      - SMTP_PASSWORD=
+    command: ["uv", "run", "python", "-m", "app.db.init_db"]
 
 volumes:
   postgres_data:
