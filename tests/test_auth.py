@@ -1,6 +1,5 @@
 from app.core.security import password_hashing
 from app.models.models import Admin
-import pytest
 
 
 

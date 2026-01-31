@@ -165,7 +165,7 @@ class AuthRepository:
         
         link = f"{settings.hostname}/{role.lower()}/password-resetting/{reset_token}"
         
-        send_email(email, f"Hey {db_user.username if role == 'Admin' else db_user.name},\nClick below to reset your password:\n{link}\nNOTE: THIS ISN'T A CLICKABLE LINK, YOU SHOULD SEND A 'POST' REQUEST TO IT INCLUDING THE NEW PASSWORD!", "Password Reset Request")
+        send_email.delay(email, f"Hey {db_user.username if role == 'Admin' else db_user.name},\nClick below to reset your password:\n{link}\nNOTE: THIS ISN'T A CLICKABLE LINK, YOU SHOULD SEND A 'POST' REQUEST TO IT INCLUDING THE NEW PASSWORD!", "Password Reset Request")
         
         return {"status": "Completed", "detail": "Email sent in the backgroud!"}
     
