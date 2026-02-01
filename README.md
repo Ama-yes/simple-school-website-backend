@@ -1,49 +1,70 @@
-# School Management Backend API (WORK IN PROGRESS)
-A simple yet scalable backend API for managing students, built with FASTAPI, SQLAlchemy and PostreSQL.
+# High-Performance School Management API (WORK IN PROGRESS)
+A fully asynchronous, performant and scalable backend API, built with **FastAPI**, **SQLAlchemy** and **PostgreSQL**.
 
 
 ## Features
-- Distinct and clean architecture.
-- Authentification system with token refresh feature.
-- Secure password hashing.
-- Strict user input validation.
+- Fully Asynchronous and optimized for high concurrency using 'asyncpg' for non-blocking database I/O.
+- Redis Integration:
+    - Asynchronous caching to reduce database pressure.
+    - Rate limiting to protect the system from brute-force attacks.
+- Security:
+    - Token versioning allows session revocation upon password change.
+    - Secure password hashing.
+    - Authentication system with token refresh feature.
+    - Strict user input validation.
+- Clean and clear separation between API controllers, data repositories and core logic.
+- Automated orchestration and deployment via docker and with separate database initialization.
+- Offloaded background tasks like SMTP email delivery to Celery workers using Redis as a message broker.
 
 
 ## Stack
 - Language: Python 3.11
 - Framework: FastAPI
-- Database: PostgreSQL and ORM with SQLAlchemy
+- Database: PostgreSQL via SQLAlchemy 2.0 using 'asyncpg' driver.
+- Redis.
 - Package manager using `uv`
 
 
 ## Project Structure
 ```
-app/
-├── api
-│   └── v1
-├── core
-├── db
-├── models
-├── repositories
-└── main.py
+├── app
+│   ├── api
+│   │   └── v1
+│   ├── core
+│   ├── db
+│   ├── models
+│   ├── repositories
+│   ├── worker
+│   └── main.py
+└── tests
 ```
 
 
 ## Getting Started
-### 1. Prerequisites
-- Python 3.11+ installed.
-- [uv](https://github.com/astral-sh/uv) installed.
+### 1. Environment Configuration
+Rename the `example.env` to `.env` and fill in the required fields.
+(Note: If the SMTP fields are left empty, emails will be sent to mailpit)
 
-### 2. Environment Setup
-Create `example.env` to `.env` and fill in the fields
+### 2. Launch the Stack
+Run the entire environment using:
+`docker compose up --build -d`
+(Note: `init_db` will handle schema creation automatically on startup)
 
-### 3. Installation
-Install dependencies using `uv`:
-uv sync
+### 3. Access Documentation
+Once running, visit:
+- Interactive Swagger Docs: `http://localhost:8000/docs`
+- Mailpit (Local email testing): `http://localhost:8025`
 
-### 4. Running the API Server
-Run the server using:
-uv run python3 -m app.main
+## Testing & Verification
+The project includes:
+- Comprehensive asynchronous testing using `pytest` and `pytest-asyncio`.
+- Tests leveraging asyncio.gather to verify that the server handles multiple simultaneous requests.
+- Uses SQLAlchemy's StaticPool to maintain an in-memory SQLite database across asynchronous connections.
+
+**Run the tests:**
+`uv run python -m pytest`
+
+*Although the test suite uses an isolated in-memory SQLite database, it still requires a redis instance to be running to handle caching behavior*
 
 
 ## Authentication Flow
@@ -52,3 +73,4 @@ uv run python3 -m app.main
 3. **Access:** Use the 'access_token' in the 'Authorization: Bearer <token>' header for protected routes.
 4. **Refresh:** When 'access_token' expires, send 'refresh_token' in the 'Authorization: Bearer <token>' header to '/student/refresh' for students or '/admin/refresh' for admins to generate a new one.
 5. **Revocation:** Changing the password instantly invalidates previously created tokens.
+6. **Identity Normalization:** The rate limiter uses a custom identifier that strips and lowers input strings to prevent attacks from bypassing limits using casing variations.
