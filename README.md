@@ -14,7 +14,10 @@ A fully asynchronous, performant and scalable backend API, built with **FastAPI*
     - Strict user input validation.
 - Clean and clear separation between API controllers, data repositories and core logic.
 - Automated orchestration and deployment via docker and with separate database initialization.
+<<<<<<< HEAD
 - Offloaded background tasks like SMTP email delivery to Celery workers using Redis as a message broker.
+=======
+>>>>>>> 8f4276da7237077b16a1363f0df27fa65f0080e9
 
 
 ## Stack
