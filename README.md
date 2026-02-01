@@ -14,6 +14,7 @@ A fully asynchronous, performant and scalable backend API, built with **FastAPI*
     - Strict user input validation.
 - Clean and clear separation between API controllers, data repositories and core logic.
 - Automated orchestration and deployment via docker and with separate database initialization.
+- Offloaded background tasks like SMTP email delivery to Celery workers using Redis as a message broker.
 
 
 ## Stack
@@ -55,7 +56,10 @@ Once running, visit:
 - Mailpit (Local email testing): `http://localhost:8025`
 
 ## Testing & Verification
-The project includes comprehensive asynchronous testing using `pytest` and `pytest-asyncio`.
+The project includes:
+- Comprehensive asynchronous testing using `pytest` and `pytest-asyncio`.
+- Tests leveraging asyncio.gather to verify that the server handles multiple simultaneous requests.
+- Uses SQLAlchemy's StaticPool to maintain an in-memory SQLite database across asynchronous connections.
 
 **Run the tests:**
 `uv run python -m pytest`
@@ -69,3 +73,4 @@ The project includes comprehensive asynchronous testing using `pytest` and `pyte
 3. **Access:** Use the 'access_token' in the 'Authorization: Bearer <token>' header for protected routes.
 4. **Refresh:** When 'access_token' expires, send 'refresh_token' in the 'Authorization: Bearer <token>' header to '/student/refresh' for students or '/admin/refresh' for admins to generate a new one.
 5. **Revocation:** Changing the password instantly invalidates previously created tokens.
+6. **Identity Normalization:** The rate limiter uses a custom identifier that strips and lowers input strings to prevent attacks from bypassing limits using casing variations.
