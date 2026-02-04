@@ -122,19 +122,12 @@ class AuthRepository:
     
     async def token_refresh(self, token: str):
         role = self._role
-        db = self._db
         
         db_user = await self.verify_refresh_token(token)
         
         access_token = create_access_token({"sub": db_user.email, "role": role})
         
-        db_user.token_version += 1
-        db.add(db_user)
-        await db.commit()
-        
-        refresh_token = create_refresh_token({"sub": db_user.email, "version": db_user.token_version, "role": role})
-        
-        return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
+        return {"access_token": access_token, "token_type": "bearer", "refresh_token": token}
     
     
     async def reset_password(self, email: str):
