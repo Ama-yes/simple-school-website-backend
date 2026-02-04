@@ -1,6 +1,6 @@
 from passlib.context import CryptContext
 from app.core.config import settings
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from jose.exceptions import ExpiredSignatureError
 from app.core.logging import setup_logger
@@ -28,7 +28,7 @@ def check_password(plain_password: str, hashed_password: str):
 def create_access_token(data: dict):
     to_encode = data.copy()
     
-    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     
     encoded = jwt.encode(to_encode, key=ACCESS_ENCODING_KEY, algorithm=ALGORITHM)
@@ -38,7 +38,7 @@ def create_access_token(data: dict):
 def create_refresh_token(data: dict):
     to_encode = data.copy()
     
-    expire = datetime.now() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire})
     
     encoded = jwt.encode(to_encode, key=REFRESH_ENCODING_KEY, algorithm=ALGORITHM)
