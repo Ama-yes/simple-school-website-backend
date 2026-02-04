@@ -6,7 +6,7 @@ from app.models.schemas import AdminLoggingIn, AdminSigningIn, StudentLoggingIn,
 from app.models.models import Admin, Teacher, Student
 from app.core.config import settings
 from app.worker.tasks import send_email
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from secrets import token_urlsafe
 
 
@@ -159,7 +159,7 @@ class AuthRepository:
         reset_token = token_urlsafe(32)
         
         db_user.reset_token = reset_token
-        db_user.reset_token_expire = datetime.now() + timedelta(minutes=15)
+        db_user.reset_token_expire = datetime.now(timezone.utc) + timedelta(minutes=15)
         
         await db.commit()
         
@@ -186,7 +186,7 @@ class AuthRepository:
         
         db_user = result.scalars().first()
         
-        if not db_user or db_user.reset_token_expire < datetime.now():
+        if not db_user or db_user.reset_token_expire < datetime.now(timezone.utc):
             raise ValueError("Invalid link!")
         
         db_user.token_version += 1
