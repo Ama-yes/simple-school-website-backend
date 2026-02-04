@@ -149,12 +149,17 @@ class AuthRepository:
         if not db_user:
             raise ValueError(f"{email} is not linked to any account!")
         
-        reset_token = token_urlsafe(32)
+        if db_user.reset_token and db_user.reset_token_expire > datetime.now(timezone.utc):
+            reset_token = db_user.reset_token
         
-        db_user.reset_token = reset_token
-        db_user.reset_token_expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        else:
+            reset_token = token_urlsafe(32)
         
-        await db.commit()
+            db_user.reset_token = reset_token
+            db_user.reset_token_expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        
+            await db.commit()
+        
         
         link = f"{settings.hostname}/{role.lower()}/password-resetting/{reset_token}"
         
